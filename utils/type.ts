@@ -1,27 +1,5 @@
 import { z } from 'zod'
 
-export const companySchema = z.object({
-  companyId: z.number().int().positive(), // primary key
-  companyName: z.string().max(100),
-  address: z.string().max(255).nullable().optional(),
-  city: z.string().max(50).nullable().optional(),
-  state: z.string().max(50).nullable().optional(),
-  country: z.string().max(50).nullable().optional(),
-  postalCode: z.string().max(20).nullable().optional(),
-  phone: z.string().max(20).nullable().optional(),
-  email: z.string().email().max(100).nullable().optional(),
-  website: z.string().url().max(100).nullable().optional(),
-  taxId: z.string().max(50).nullable().optional(),
-  logo: z.string().nullable().optional(), // text column
-  parentCompanyId: z.number().int().positive().nullable().optional(),
-  active: z.boolean().optional(), // default is true
-  createdAt: z.string().datetime().optional(), // timestamp
-  updatedAt: z.string().datetime().optional(), // timestamp
-})
-export const createCompanySchema = companySchema.omit({ companyId: true })
-export type GetCompanyType = z.infer<typeof companySchema>
-export type CreateCompanyType = z.infer<typeof createCompanySchema>
-
 export const SignInRequestSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
@@ -44,12 +22,6 @@ export const RoleSchema = z.object({
   rolePermissions: z.array(RolePermissionSchema),
 })
 
-export const UserCompanySchema = z.object({
-  userId: z.number(),
-  companyId: z.number(),
-  company: companySchema,
-})
-
 export const UserSchema = z.object({
   userId: z.number(),
   username: z.string(),
@@ -66,9 +38,45 @@ export const SignInResponseSchema = z.object({
   token: z.string(),
   user: UserSchema,
 })
-
 export type SignInRequest = z.infer<typeof SignInRequestSchema>
 export type SignInResponse = z.infer<typeof SignInResponseSchema>
+
+export const itemSchema = z.object({
+  itemId: z.number().optional(),
+  itemName: z.string().min(1, "Item name is required"),
+  sellPriece: z.number().positive("Sell price must be a positive number"),
+  createdBy: z.number(),
+  createdAt: z.coerce.date().optional().nullable(),
+  updatedBy: z.number().optional(),
+  updatedAt: z.coerce.date().optional().nullable(),
+});
+export const createItemSchema = itemSchema.omit({ itemId: true })
+export type GetItemType = z.infer<typeof itemSchema>
+export type CreateItemType = z.infer<typeof createItemSchema>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const transactionSchema = z.object({
   id: z.number().int().positive(),

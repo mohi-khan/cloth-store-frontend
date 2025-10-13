@@ -5,10 +5,9 @@ import {
   approveClaim,
   approveTravelClaim,
   createClaim,
-  createCompany,
-  createDepartment,
   createDesignation,
   createEmployee,
+  createItem,
   createMobileAllowancePolicy,
   createReimbursementPolicies,
   createTaPolicy,
@@ -22,10 +21,9 @@ import {
   editTaPolicy,
   getAllClaims,
   getAllClaimTypeBalances,
-  getAllCompanies,
-  getAllDepartments,
   getAllDesignations,
   getAllEmployees,
+  getAllItems,
   getAllMobileAllowancePolicies,
   getAllReimbursementPolicies,
   getAllTaPolicies,
@@ -43,10 +41,10 @@ import {
 } from '@/utils/api'
 import type {
   CreateClaimType,
-  CreateCompanyType,
   CreateDepartmentType,
   CreateDesignationType,
   CreateEmployeeType,
+  CreateItemType,
   CreateMobileAllowancePolicyType,
   CreateReimbursementPolicyType,
   CreateTaPolicyType,
@@ -60,25 +58,25 @@ import type {
 } from '@/utils/type'
 import { toast } from './use-toast'
 
-//company
-export const useGetCompanies = () => {
+//item
+export const useGetItems = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
 
   return useQuery({
-    queryKey: ['companies'],
+    queryKey: ['items'],
     queryFn: () => {
       if (!token) {
         throw new Error('Token not found')
       }
-      return getAllCompanies(token)
+      return getAllItems(token)
     },
     enabled: !!token,
     select: (data) => data,
   })
 }
 
-export const useAddCompany = ({
+export const useAddItem = ({
   onClose,
   reset,
 }: {
@@ -90,66 +88,13 @@ export const useAddCompany = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: (data: CreateCompanyType) => {
-      return createCompany(data, token)
-    },
-    onSuccess: (data) => {
-      console.log('company added successfully:', data)
-
-      queryClient.invalidateQueries({ queryKey: ['companies'] })
-
-      // Reset form fields after success
-      reset()
-
-      // Close the form modal
-      onClose()
-    },
-    onError: (error) => {
-      // Handle error
-      console.error('Error adding company:', error)
-    },
-  })
-
-  return mutation
-}
-
-//department
-export const useGetDepartments = () => {
-  const [token] = useAtom(tokenAtom)
-  useInitializeUser()
-
-  return useQuery({
-    queryKey: ['departments'],
-    queryFn: () => {
-      if (!token) {
-        throw new Error('Token not found')
-      }
-      return getAllDepartments(token)
-    },
-    enabled: !!token,
-    select: (data) => data,
-  })
-}
-
-export const useAddDepartment = ({
-  onClose,
-  reset,
-}: {
-  onClose: () => void
-  reset: () => void
-}) => {
-  useInitializeUser()
-  const [token] = useAtom(tokenAtom)
-  const queryClient = useQueryClient()
-
-  const mutation = useMutation({
-    mutationFn: (data: CreateDepartmentType) => {
-      return createDepartment(data, token)
+    mutationFn: (data: CreateItemType) => {
+      return createItem(data, token)
     },
     onSuccess: (data) => {
       console.log('department added successfully:', data)
 
-      queryClient.invalidateQueries({ queryKey: ['departments'] })
+      queryClient.invalidateQueries({ queryKey: ['items'] })
 
       // Reset form fields after success
       reset()

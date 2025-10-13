@@ -3,10 +3,10 @@ import {
   BirthdayReportType,
   Claims,
   CreateClaimType,
-  CreateCompanyType,
   CreateDepartmentType,
   CreateDesignationType,
   CreateEmployeeType,
+  CreateItemType,
   CreateMobileAllowancePolicyType,
   CreateReimbursementPolicyType,
   CreateTaPolicyType,
@@ -16,11 +16,11 @@ import {
   EmployeeClaimReportType,
   GetClaimType,
   GetClaimTypeBalanceType,
-  GetCompanyType,
   GetDepartmentType,
   GetDesignationType,
   GetEmployeeSalaryHistoryType,
   GetEmployeeType,
+  GetItemType,
   GetMobileAllowancePolicyType,
   GetReimbursementPolicyType,
   GetTaPolicyType,
@@ -29,29 +29,6 @@ import {
   SignInResponse,
   SignInResponseSchema,
 } from '@/utils/type'
-
-export async function createCompany(data: CreateCompanyType, token: string) {
-  return fetchApi<CreateCompanyType>({
-    url: 'api/company/create-company',
-    method: 'POST',
-    body: data,
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-  })
-}
-
-export async function getAllCompanies(token: string) {
-  return fetchApi<GetCompanyType[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-  })
-}
 
 export async function signIn(credentials: SignInRequest) {
   return fetchApi<SignInResponse>({
@@ -62,9 +39,9 @@ export async function signIn(credentials: SignInRequest) {
   })
 }
 
-export async function getAllDepartments(token: string) {
-  return fetchApi<GetDepartmentType[]>({
-    url: 'api/department/getall',
+export async function getAllItems(token: string) {
+  return fetchApi<GetItemType[]>({
+    url: 'api/item/getAll',
     method: 'GET',
     headers: {
       Authorization: token,
@@ -73,12 +50,12 @@ export async function getAllDepartments(token: string) {
   })
 }
 
-export async function createDepartment(
-  data: CreateDepartmentType,
+export async function createItem(
+  data: CreateItemType,
   token: string
 ) {
-  return fetchApi<CreateDepartmentType>({
-    url: 'api/department/create',
+  return fetchApi<CreateItemType>({
+    url: 'api/item/create',
     method: 'POST',
     body: data,
     headers: {
@@ -87,6 +64,35 @@ export async function createDepartment(
     },
   })
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export async function getAllDesignations(token: string) {
   return fetchApi<GetDesignationType[]>({
