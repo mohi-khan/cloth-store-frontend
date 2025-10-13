@@ -39,25 +39,9 @@ export function DashboardSidebar() {
       href: '/dashboard/setup',
       subItems: [
         {
-          title: 'Company Info',
-          href: '/dashboard/setup/company-info',
+          title: 'Items',
+          href: '/dashboard/setup/items',
         },
-        {
-          title: 'Departments',
-          href: '/dashboard/setup/departments',
-        },
-        {
-          title: 'Designations',
-          href: '/dashboard/setup/designations',
-        },
-        {
-          title: 'Employees',
-          href: '/dashboard/setup/employees',
-        },
-        // {
-        //   title: 'Claim Type Balance',
-        //   href: '/dashboard/setup/claim-type-balance',
-        // },
       ],
     },
     {
