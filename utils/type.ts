@@ -70,6 +70,22 @@ export const createBankAccountSchema = bankAccountSchema.omit({
 export type GetBankAccountType = z.infer<typeof bankAccountSchema>
 export type CreateBankAccountType = z.infer<typeof createBankAccountSchema>
 
+export const vendorSchema = z.object({
+  vendorId: z.number().int().optional(),
+  name: z.string().min(1, "Vendor name is required").max(100),
+  contactPerson: z.string().max(100).optional().nullable(),
+  phone: z.string().max(20).optional().nullable(),
+  email: z.string().email("Invalid email format").max(100).optional().nullable(),
+  address: z.string().max(255).optional().nullable(),
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(),
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+});
+export const createVendorSchema = vendorSchema.omit({ vendorId: true });
+export type GetVendorType = z.infer<typeof vendorSchema>;
+export type CreateVendorType = z.infer<typeof createVendorSchema>;
+
 
 export interface User {
   userId: number

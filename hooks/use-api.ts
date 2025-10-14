@@ -13,6 +13,7 @@ import {
   createReimbursementPolicies,
   createTaPolicy,
   createTravelClaim,
+  createVendor,
   editBankAccount,
   editClaim,
   EditClaimTypeBalance,
@@ -21,6 +22,7 @@ import {
   editMobileAllowancePolicy,
   editReimbursementPolicies,
   editTaPolicy,
+  editVendor,
   getAllBankAccounts,
   getAllClaims,
   getAllClaimTypeBalances,
@@ -31,6 +33,7 @@ import {
   getAllReimbursementPolicies,
   getAllTaPolicies,
   getAllTravelClaims,
+  getAllVendors,
   getBirthdayReport,
   getClaimBalance,
   getCurrentMonthClaimsCount,
@@ -45,7 +48,9 @@ import {
 import type {
   CreateBankAccountType,
   CreateItemType,
+  CreateVendorType,
   GetBankAccountType,
+  GetVendorType,
 } from '@/utils/type'
 import { toast } from './use-toast'
 
@@ -173,6 +178,88 @@ export const useEditBankAccount = ({
     },
     onError: (error) => {
       console.error('Error editing bank account:', error)
+    },
+  })
+
+  return mutation
+}
+
+//vendor
+export const useGetVendors = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['vendors'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllVendors(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddVendor = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateVendorType) => {
+      return createVendor(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('vendor added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['vendors'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding vendor:', error)
+    },
+  })
+
+  return mutation
+}
+
+export const useEditVendor = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: GetVendorType }) => {
+      return editVendor(id, data, token)
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success!',
+        description: 'vendor edited successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['vendors'] })
+
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error editing vendor:', error)
     },
   })
 

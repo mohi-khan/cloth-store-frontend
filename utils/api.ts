@@ -7,6 +7,8 @@ import {
   GetItemType,
   GetBankAccountType,
   CreateBankAccountType,
+  GetVendorType,
+  CreateVendorType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -77,6 +79,48 @@ export async function editBankAccount(
 ) {
   return fetchApi<GetBankAccountType>({
     url: `api/bank-account/edit/${id}`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllVendors(token: string) {
+  return fetchApi<GetVendorType[]>({
+    url: 'api/vendor/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createVendor(
+  data: CreateVendorType,
+  token: string
+) {
+  return fetchApi<CreateVendorType>({
+    url: 'api/vendor/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function editVendor(
+  id: number,
+  data: GetVendorType,
+  token: string
+) {
+  return fetchApi<GetVendorType>({
+    url: `api/vendor/edit/${id}`,
     method: 'PATCH',
     body: data,
     headers: {

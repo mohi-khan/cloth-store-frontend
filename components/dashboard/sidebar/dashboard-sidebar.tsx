@@ -46,6 +46,10 @@ export function DashboardSidebar() {
           title: 'Bank Accounts',
           href: '/dashboard/setup/bank-accounts',
         },
+        {
+          title: 'Vendors',
+          href: '/dashboard/setup/vendors',
+        },
       ],
     },
     {
