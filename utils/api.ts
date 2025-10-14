@@ -1,33 +1,16 @@
 import { fetchApi } from '@/utils/http'
 import {
-  BirthdayReportType,
-  Claims,
-  CreateClaimType,
-  CreateDepartmentType,
-  CreateDesignationType,
-  CreateEmployeeType,
-  CreateItemType,
-  CreateMobileAllowancePolicyType,
-  CreateReimbursementPolicyType,
-  CreateTaPolicyType,
-  CreateTravelClaimType,
-  EditClaimType,
-  EditClaimTypeBalanceType,
-  EmployeeClaimReportType,
-  GetClaimType,
-  GetClaimTypeBalanceType,
-  GetDepartmentType,
-  GetDesignationType,
-  GetEmployeeSalaryHistoryType,
-  GetEmployeeType,
-  GetItemType,
-  GetMobileAllowancePolicyType,
-  GetReimbursementPolicyType,
-  GetTaPolicyType,
-  GetTravelClaimType,
   SignInRequest,
   SignInResponse,
   SignInResponseSchema,
+  CreateItemType,
+  GetItemType,
+  GetBankAccountType,
+  CreateBankAccountType,
+  GetVendorType,
+  CreateVendorType,
+  GetPurchaseType,
+  CreatePurchaseType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -65,7 +48,115 @@ export async function createItem(
   })
 }
 
+export async function getAllBankAccounts(token: string) {
+  return fetchApi<GetBankAccountType[]>({
+    url: 'api/bank-account/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
+export async function createBankAccount(
+  data: CreateBankAccountType,
+  token: string
+) {
+  return fetchApi<CreateBankAccountType>({
+    url: 'api/bank-account/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function editBankAccount(
+  id: number,
+  data: GetBankAccountType,
+  token: string
+) {
+  return fetchApi<GetBankAccountType>({
+    url: `api/bank-account/edit/${id}`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllVendors(token: string) {
+  return fetchApi<GetVendorType[]>({
+    url: 'api/vendor/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createVendor(
+  data: CreateVendorType,
+  token: string
+) {
+  return fetchApi<CreateVendorType>({
+    url: 'api/vendor/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function editVendor(
+  id: number,
+  data: GetVendorType,
+  token: string
+) {
+  return fetchApi<GetVendorType>({
+    url: `api/vendor/edit/${id}`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllPurchases(token: string) {
+  return fetchApi<GetPurchaseType[]>({
+    url: 'api/purchase/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createPurchase(
+  data: CreatePurchaseType,
+  token: string
+) {
+  return fetchApi<CreatePurchaseType>({
+    url: 'api/purchase/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
 
 

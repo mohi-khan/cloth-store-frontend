@@ -42,6 +42,18 @@ export function DashboardSidebar() {
           title: 'Items',
           href: '/dashboard/setup/items',
         },
+        {
+          title: 'Bank Accounts',
+          href: '/dashboard/setup/bank-accounts',
+        },
+        {
+          title: 'Vendors',
+          href: '/dashboard/setup/vendors',
+        },
+        {
+          title: 'Purchases',
+          href: '/dashboard/setup/purchases',
+        },
       ],
     },
     {

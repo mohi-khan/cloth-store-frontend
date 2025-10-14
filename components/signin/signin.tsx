@@ -100,7 +100,7 @@ export default function SignIn() {
               height={80}
               className=""
             /> */}
-            <h2 className="text-3xl font-bold ">Claim Management</h2>
+            <h2 className="text-3xl font-bold ">Cloth Store</h2>
           </div>
           <CardTitle className="text-2xl font-bold text-center">
             Sign in to your account
