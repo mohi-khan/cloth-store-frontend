@@ -9,6 +9,8 @@ import {
   CreateBankAccountType,
   GetVendorType,
   CreateVendorType,
+  GetPurchaseType,
+  CreatePurchaseType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -130,7 +132,31 @@ export async function editVendor(
   })
 }
 
+export async function getAllPurchases(token: string) {
+  return fetchApi<GetPurchaseType[]>({
+    url: 'api/purchase/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
+export async function createPurchase(
+  data: CreatePurchaseType,
+  token: string
+) {
+  return fetchApi<CreatePurchaseType>({
+    url: 'api/purchase/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
 
 

@@ -10,6 +10,7 @@ import {
   createEmployee,
   createItem,
   createMobileAllowancePolicy,
+  createPurchase,
   createReimbursementPolicies,
   createTaPolicy,
   createTravelClaim,
@@ -30,6 +31,7 @@ import {
   getAllEmployees,
   getAllItems,
   getAllMobileAllowancePolicies,
+  getAllPurchases,
   getAllReimbursementPolicies,
   getAllTaPolicies,
   getAllTravelClaims,
@@ -48,6 +50,7 @@ import {
 import type {
   CreateBankAccountType,
   CreateItemType,
+  CreatePurchaseType,
   CreateVendorType,
   GetBankAccountType,
   GetVendorType,
@@ -266,7 +269,52 @@ export const useEditVendor = ({
   return mutation
 }
 
+export const useGetPurchases = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
 
+  return useQuery({
+    queryKey: ['purchases'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllPurchases(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddPurchase = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreatePurchaseType) => {
+      return createPurchase(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('purchase added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['purchases'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding purchase:', error)
+    },
+  })
+
+  return mutation
+}
 
 
 

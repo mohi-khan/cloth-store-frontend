@@ -72,20 +72,50 @@ export type CreateBankAccountType = z.infer<typeof createBankAccountSchema>
 
 export const vendorSchema = z.object({
   vendorId: z.number().int().optional(),
-  name: z.string().min(1, "Vendor name is required").max(100),
+  name: z.string().min(1, 'Vendor name is required').max(100),
   contactPerson: z.string().max(100).optional().nullable(),
   phone: z.string().max(20).optional().nullable(),
-  email: z.string().email("Invalid email format").max(100).optional().nullable(),
+  email: z
+    .string()
+    .email('Invalid email format')
+    .max(100)
+    .optional()
+    .nullable(),
   address: z.string().max(255).optional().nullable(),
   createdBy: z.number().int(),
   createdAt: z.date().optional(),
   updatedBy: z.number().int().optional().nullable(),
   updatedAt: z.date().optional().nullable(),
-});
-export const createVendorSchema = vendorSchema.omit({ vendorId: true });
-export type GetVendorType = z.infer<typeof vendorSchema>;
-export type CreateVendorType = z.infer<typeof createVendorSchema>;
+})
+export const createVendorSchema = vendorSchema.omit({ vendorId: true })
+export type GetVendorType = z.infer<typeof vendorSchema>
+export type CreateVendorType = z.infer<typeof createVendorSchema>
 
+export const purchaseSchema = z.object({
+  purchaseId: z.number().int().optional(), // Auto-increment primary key
+  itemId: z.number().int(), // Foreign key, required
+  totalQuantity: z.number().int().min(1, 'Total quantity must be at least 1'),
+  notes: z.string().optional().nullable(),
+  vendorId: z.number().int(), // Foreign key, required
+  paymentType: z.enum(['cash', 'credit', 'bank', 'mfs']),
+  bankAccountId: z.number().int().optional().nullable(), // Foreign key, can be null
+  purchaseDate: z.date(),
+  totalAmount: z.number().min(0, 'Total amount must be at least 0'),
+  isSorted: z.boolean().optional().default(false),
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(), // Default set by DB
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+})
+export const createPurchaseSchema = purchaseSchema.omit({ purchaseId: true })
+export type GetPurchaseType = z.infer<typeof purchaseSchema> & {
+  itemName: string
+  vendorName: string
+  bankName: string
+  branch: string
+  accountNumber: string
+}
+export type CreatePurchaseType = z.infer<typeof createPurchaseSchema>
 
 export interface User {
   userId: number

@@ -50,6 +50,10 @@ export function DashboardSidebar() {
           title: 'Vendors',
           href: '/dashboard/setup/vendors',
         },
+        {
+          title: 'Purchases',
+          href: '/dashboard/setup/purchases',
+        },
       ],
     },
     {
