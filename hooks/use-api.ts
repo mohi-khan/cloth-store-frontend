@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   approveClaim,
   approveTravelClaim,
+  createBankAccount,
   createClaim,
   createDesignation,
   createEmployee,
@@ -12,6 +13,7 @@ import {
   createReimbursementPolicies,
   createTaPolicy,
   createTravelClaim,
+  editBankAccount,
   editClaim,
   EditClaimTypeBalance,
   editDesignation,
@@ -19,6 +21,7 @@ import {
   editMobileAllowancePolicy,
   editReimbursementPolicies,
   editTaPolicy,
+  getAllBankAccounts,
   getAllClaims,
   getAllClaimTypeBalances,
   getAllDesignations,
@@ -40,21 +43,9 @@ import {
   getTravelAmounts,
 } from '@/utils/api'
 import type {
-  CreateClaimType,
-  CreateDepartmentType,
-  CreateDesignationType,
-  CreateEmployeeType,
+  CreateBankAccountType,
   CreateItemType,
-  CreateMobileAllowancePolicyType,
-  CreateReimbursementPolicyType,
-  CreateTaPolicyType,
-  CreateTravelClaimType,
-  EditClaimType,
-  EditClaimTypeBalanceType,
-  GetDesignationType,
-  GetMobileAllowancePolicyType,
-  GetReimbursementPolicyType,
-  GetTaPolicyType,
+  GetBankAccountType,
 } from '@/utils/type'
 import { toast } from './use-toast'
 
@@ -92,44 +83,39 @@ export const useAddItem = ({
       return createItem(data, token)
     },
     onSuccess: (data) => {
-      console.log('department added successfully:', data)
+      console.log('item added successfully:', data)
 
       queryClient.invalidateQueries({ queryKey: ['items'] })
-
-      // Reset form fields after success
       reset()
-
-      // Close the form modal
       onClose()
     },
     onError: (error) => {
-      // Handle error
-      console.error('Error adding department:', error)
+      console.error('Error adding item:', error)
     },
   })
 
   return mutation
 }
 
-//designation
-export const useGetDesignations = () => {
+//bank-account
+export const useGetBankAccounts = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
 
   return useQuery({
-    queryKey: ['designations'],
+    queryKey: ['bankAccounts'],
     queryFn: () => {
       if (!token) {
         throw new Error('Token not found')
       }
-      return getAllDesignations(token)
+      return getAllBankAccounts(token)
     },
     enabled: !!token,
     select: (data) => data,
   })
 }
 
-export const useAddDesignation = ({
+export const useAddBankAccount = ({
   onClose,
   reset,
 }: {
@@ -141,30 +127,25 @@ export const useAddDesignation = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: (data: CreateDesignationType) => {
-      return createDesignation(data, token)
+    mutationFn: (data: CreateBankAccountType) => {
+      return createBankAccount(data, token)
     },
     onSuccess: (data) => {
-      console.log('designation added successfully:', data)
+      console.log('bank account added successfully:', data)
 
-      queryClient.invalidateQueries({ queryKey: ['designations'] })
-
-      // Reset form fields after success
+      queryClient.invalidateQueries({ queryKey: ['bankAccounts'] })
       reset()
-
-      // Close the form modal
       onClose()
     },
     onError: (error) => {
-      // Handle error
-      console.error('Error adding designation:', error)
+      console.error('Error adding bank account:', error)
     },
   })
 
   return mutation
 }
 
-export const useEditDesignation = ({
+export const useEditBankAccount = ({
   onClose,
   reset,
 }: {
@@ -177,26 +158,36 @@ export const useEditDesignation = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: GetDesignationType }) => {
-      return editDesignation(id, data, token)
+    mutationFn: ({ id, data }: { id: number; data: GetBankAccountType }) => {
+      return editBankAccount(id, data, token)
     },
     onSuccess: () => {
       toast({
         title: 'Success!',
-        description: 'Designation information edited successfully.',
+        description: 'Bank account edited successfully.',
       })
-      queryClient.invalidateQueries({ queryKey: ['designations'] })
+      queryClient.invalidateQueries({ queryKey: ['bankAccounts'] })
 
       reset()
       onClose()
     },
     onError: (error) => {
-      console.error('Error editing Designation:', error)
+      console.error('Error editing bank account:', error)
     },
   })
 
   return mutation
 }
+
+
+
+
+
+
+
+
+
+
 
 //ta policy levels
 export const useGetTaPolicyLevels = () => {

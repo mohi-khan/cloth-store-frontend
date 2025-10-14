@@ -1,33 +1,12 @@
 import { fetchApi } from '@/utils/http'
 import {
-  BirthdayReportType,
-  Claims,
-  CreateClaimType,
-  CreateDepartmentType,
-  CreateDesignationType,
-  CreateEmployeeType,
-  CreateItemType,
-  CreateMobileAllowancePolicyType,
-  CreateReimbursementPolicyType,
-  CreateTaPolicyType,
-  CreateTravelClaimType,
-  EditClaimType,
-  EditClaimTypeBalanceType,
-  EmployeeClaimReportType,
-  GetClaimType,
-  GetClaimTypeBalanceType,
-  GetDepartmentType,
-  GetDesignationType,
-  GetEmployeeSalaryHistoryType,
-  GetEmployeeType,
-  GetItemType,
-  GetMobileAllowancePolicyType,
-  GetReimbursementPolicyType,
-  GetTaPolicyType,
-  GetTravelClaimType,
   SignInRequest,
   SignInResponse,
   SignInResponseSchema,
+  CreateItemType,
+  GetItemType,
+  GetBankAccountType,
+  CreateBankAccountType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -60,6 +39,48 @@ export async function createItem(
     body: data,
     headers: {
       Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllBankAccounts(token: string) {
+  return fetchApi<GetBankAccountType[]>({
+    url: 'api/bank-account/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createBankAccount(
+  data: CreateBankAccountType,
+  token: string
+) {
+  return fetchApi<CreateBankAccountType>({
+    url: 'api/bank-account/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function editBankAccount(
+  id: number,
+  data: GetBankAccountType,
+  token: string
+) {
+  return fetchApi<GetBankAccountType>({
+    url: `api/bank-account/edit/${id}`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })
