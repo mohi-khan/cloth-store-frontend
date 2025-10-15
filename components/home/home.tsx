@@ -58,7 +58,7 @@ export default function SignIn() {
         const {
           userId,
           roleId,
-          userCompanies,
+          // userCompanies,
           // voucherTypes,
           // employeeId,
         } = response.data.user
@@ -66,7 +66,7 @@ export default function SignIn() {
         const userInfo = {
           userId,
           roleId,
-          userCompanies,
+          // userCompanies,
           // voucherTypes,
           // employeeId,
         }
@@ -100,7 +100,7 @@ export default function SignIn() {
               height={80}
               className=""
             /> */}
-            <h2 className="text-3xl font-bold ">Claim Management</h2>
+            <h2 className="text-3xl font-bold ">Cloth Store</h2>
           </div>
           <CardTitle className="text-2xl font-bold text-center">
             Sign in to your account
@@ -122,7 +122,7 @@ export default function SignIn() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 pb-3">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input

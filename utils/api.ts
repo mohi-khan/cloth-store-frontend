@@ -11,6 +11,8 @@ import {
   CreateVendorType,
   GetPurchaseType,
   CreatePurchaseType,
+  GetSortingType,
+  CreateSortingType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -158,7 +160,48 @@ export async function createPurchase(
   })
 }
 
+export async function getAllSortings(token: string) {
+  return fetchApi<GetSortingType[]>({
+    url: 'api/sorting/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
+export async function createSorting(
+  purchaseId: number,
+  data: CreateSortingType,
+  token: string
+) {
+  return fetchApi<CreateSortingType>({
+    url: `api/sorting/create/${purchaseId}`,
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function editSorting(
+  id: number,
+  data: GetSortingType,
+  token: string
+) {
+  return fetchApi<GetSortingType>({
+    url: `api/sorting/edit/${id}`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
 
 
