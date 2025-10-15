@@ -4,7 +4,6 @@ import type React from 'react'
 import { useCallback, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -13,14 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Pagination,
   PaginationContent,
@@ -31,11 +22,7 @@ import {
 } from '@/components/ui/pagination'
 import { ArrowUpDown, Search, Package, Plus, Trash2 } from 'lucide-react'
 import { Popup } from '@/utils/popup'
-import type {
-  CreateSortingType,
-  GetSortingType,
-  GetPurchaseType,
-} from '@/utils/type'
+import type { GetSortingType, GetPurchaseType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import formatDate from '@/utils/formatDate'
@@ -52,6 +39,7 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import { useToast } from '@/hooks/use-toast'
 
 interface SortingItem {
+  sortingId?: number
   itemId: number
   quantity: number
   notes: string
@@ -78,11 +66,17 @@ const Sortings = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [searchTerm, setSearchTerm] = useState('')
 
+  const [purchaseSortColumn, setPurchaseSortColumn] =
+    useState<keyof GetPurchaseType>('purchaseDate')
+  const [purchaseSortDirection, setPurchaseSortDirection] = useState<
+    'asc' | 'desc'
+  >('desc')
+
   const [isSortPopupOpen, setIsSortPopupOpen] = useState(false)
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false)
   const [selectedPurchase, setSelectedPurchase] =
     useState<GetPurchaseType | null>(null)
-  const [selectedSorting, setSelectedSorting] = useState<GetSortingType | null>(
+  const [selectedPurchaseId, setSelectedPurchaseId] = useState<number | null>(
     null
   )
 
@@ -91,25 +85,9 @@ const Sortings = () => {
     { itemId: 0, quantity: 0, notes: '', totalAmount: 0 },
   ])
 
-  // For edit popup - single item
-  const [editFormData, setEditFormData] = useState<GetSortingType>({
-    sortingId: 0,
-    itemId: 0,
-    totalQuantity: 1,
-    notes: '',
-    vendorId: 0,
-    purchaseId: 0,
-    paymentType: 'cash',
-    bankAccountId: null,
-    sortingDate: new Date(),
-    totalAmount: 0,
-    createdBy: userData?.userId || 0,
-    itemName: '',
-    vendorName: '',
-    bankName: '',
-    branch: '',
-    accountNumber: '',
-  })
+  const [editSortingItems, setEditSortingItems] = useState<SortingItem[]>([
+    { itemId: 0, quantity: 0, notes: '', totalAmount: 0 },
+  ])
 
   const handleSort = (column: keyof GetSortingType) => {
     if (column === sortColumn) {
@@ -117,6 +95,15 @@ const Sortings = () => {
     } else {
       setSortColumn(column)
       setSortDirection('asc')
+    }
+  }
+
+  const handlePurchaseSort = (column: keyof GetPurchaseType) => {
+    if (column === purchaseSortColumn) {
+      setPurchaseSortDirection(purchaseSortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setPurchaseSortColumn(column)
+      setPurchaseSortDirection('asc')
     }
   }
 
@@ -157,12 +144,65 @@ const Sortings = () => {
     })
   }, [filteredSortings, sortColumn, sortDirection])
 
+  const groupedSortings = useMemo(() => {
+    const groups = new Map<number, GetSortingType[]>()
+    sortedSortings.forEach((sorting) => {
+      const purchaseId = sorting.purchaseId
+      if (!groups.has(purchaseId)) {
+        groups.set(purchaseId, [])
+      }
+      groups.get(purchaseId)!.push(sorting)
+    })
+    return groups
+  }, [sortedSortings])
+
+  const flattenedGroupedSortings = useMemo(() => {
+    const result: Array<{
+      type: 'group'
+      purchaseId: number
+      sortings: GetSortingType[]
+    }> = []
+    groupedSortings.forEach((sortings, purchaseId) => {
+      result.push({ type: 'group', purchaseId, sortings })
+    })
+    return result
+  }, [groupedSortings])
+
   const paginatedSortings = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
-    return sortedSortings.slice(startIndex, startIndex + itemsPerPage)
-  }, [sortedSortings, currentPage, itemsPerPage])
+    return flattenedGroupedSortings.slice(startIndex, startIndex + itemsPerPage)
+  }, [flattenedGroupedSortings, currentPage, itemsPerPage])
 
-  const totalPages = Math.ceil(sortedSortings.length / itemsPerPage)
+  const totalPages = Math.ceil(flattenedGroupedSortings.length / itemsPerPage)
+
+  const sortedPurchases = useMemo(() => {
+    if (!purchases?.data) return []
+    return [...purchases.data]
+      .filter((purchase: GetPurchaseType) => purchase.isSorted === false)
+      .sort((a, b) => {
+        const aValue = a[purchaseSortColumn] ?? ''
+        const bValue = b[purchaseSortColumn] ?? ''
+
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return purchaseSortDirection === 'asc'
+            ? aValue - bValue
+            : bValue - aValue
+        }
+        if (aValue instanceof Date && bValue instanceof Date) {
+          return purchaseSortDirection === 'asc'
+            ? aValue.getTime() - bValue.getTime()
+            : bValue.getTime() - aValue.getTime()
+        }
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return purchaseSortDirection === 'asc'
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue)
+        }
+        if (aValue < bValue) return purchaseSortDirection === 'asc' ? -1 : 1
+        if (aValue > bValue) return purchaseSortDirection === 'asc' ? 1 : -1
+        return 0
+      })
+  }, [purchases?.data, purchaseSortColumn, purchaseSortDirection])
 
   // Handle opening sort popup
   const handleOpenSortPopup = (purchase: GetPurchaseType) => {
@@ -171,10 +211,34 @@ const Sortings = () => {
     setIsSortPopupOpen(true)
   }
 
-  // Handle opening edit popup
-  const handleOpenEditPopup = (sorting: GetSortingType) => {
-    setSelectedSorting(sorting)
-    setEditFormData(sorting)
+  const handleOpenEditPopup = (purchaseId: number) => {
+    const sortingsForPurchase = groupedSortings.get(purchaseId) || []
+    const purchase = purchases?.data?.find(
+      (p: GetPurchaseType) => p.purchaseId === purchaseId
+    )
+
+    if (!purchase) {
+      toast({
+        title: 'Error',
+        description: 'Purchase not found',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setSelectedPurchaseId(purchaseId)
+    setSelectedPurchase(purchase)
+
+    // Map existing sortings to edit items
+    const editItems: SortingItem[] = sortingsForPurchase.map((sorting) => ({
+      sortingId: sorting.sortingId,
+      itemId: sorting.itemId,
+      quantity: sorting.totalQuantity,
+      notes: sorting.notes || '',
+      totalAmount: sorting.totalAmount,
+    }))
+
+    setEditSortingItems(editItems)
     setIsEditPopupOpen(true)
   }
 
@@ -186,10 +250,23 @@ const Sortings = () => {
     ])
   }
 
+  const handleAddEditSortingItem = () => {
+    setEditSortingItems([
+      ...editSortingItems,
+      { itemId: 0, quantity: 0, notes: '', totalAmount: 0 },
+    ])
+  }
+
   // Remove sorting item
   const handleRemoveSortingItem = (index: number) => {
     if (sortingItems.length > 1) {
       setSortingItems(sortingItems.filter((_, i) => i !== index))
+    }
+  }
+
+  const handleRemoveEditSortingItem = (index: number) => {
+    if (editSortingItems.length > 1) {
+      setEditSortingItems(editSortingItems.filter((_, i) => i !== index))
     }
   }
 
@@ -202,10 +279,24 @@ const Sortings = () => {
     const updated = [...sortingItems]
     if (field === 'itemId' || field === 'quantity' || field === 'totalAmount') {
       updated[index][field] = Number(value)
-    } else {
+    } else if (field === 'notes') {
       updated[index][field] = String(value)
     }
     setSortingItems(updated)
+  }
+
+  const handleUpdateEditSortingItem = (
+    index: number,
+    field: keyof SortingItem,
+    value: number | string
+  ) => {
+    const updated = [...editSortingItems]
+    if (field === 'itemId' || field === 'quantity' || field === 'totalAmount') {
+      updated[index][field] = Number(value)
+    } else if (field === 'notes') {
+      updated[index][field] = String(value)
+    }
+    setEditSortingItems(updated)
   }
 
   const resetSortForm = () => {
@@ -216,25 +307,9 @@ const Sortings = () => {
   }
 
   const resetEditForm = () => {
-    setEditFormData({
-      sortingId: 0,
-      itemId: 0,
-      totalQuantity: 1,
-      notes: '',
-      vendorId: 0,
-      purchaseId: 0,
-      paymentType: 'cash',
-      bankAccountId: null,
-      sortingDate: new Date(),
-      totalAmount: 0,
-      createdBy: userData?.userId || 0,
-      itemName: '',
-      vendorName: '',
-      bankName: '',
-      branch: '',
-      accountNumber: '',
-    })
-    setSelectedSorting(null)
+    setEditSortingItems([{ itemId: 0, quantity: 0, notes: '', totalAmount: 0 }])
+    setSelectedPurchase(null)
+    setSelectedPurchaseId(null)
     setIsEditPopupOpen(false)
     setError(null)
   }
@@ -333,63 +408,87 @@ const Sortings = () => {
     }
   }
 
-  // Handle edit submission
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
-    if (!editFormData.itemId || editFormData.itemId === 0) {
-      setError('Please select an item')
+    if (!selectedPurchase || !selectedPurchaseId) {
+      setError('No purchase selected')
       return
     }
-    if (!editFormData.vendorId || editFormData.vendorId === 0) {
-      setError('Please select a vendor')
+
+    // Validate all items are selected
+    const hasEmptyItems = editSortingItems.some((item) => item.itemId === 0)
+    if (hasEmptyItems) {
+      toast({
+        title: 'Error',
+        description: 'Please select an item for all rows',
+        variant: 'destructive',
+      })
       return
     }
-    if (
-      editFormData.paymentType === 'bank' &&
-      (!editFormData.bankAccountId || editFormData.bankAccountId === 0)
-    ) {
-      setError('Please select a bank account for bank payment')
+
+    // Calculate total quantity
+    const totalQuantity = editSortingItems.reduce(
+      (sum, item) => sum + item.quantity,
+      0
+    )
+
+    // Validate total quantity matches purchase quantity
+    if (totalQuantity !== selectedPurchase.totalQuantity) {
+      toast({
+        title: 'Quantity Mismatch',
+        description: `Total quantity (${totalQuantity}) must match purchase quantity (${selectedPurchase.totalQuantity})`,
+        variant: 'destructive',
+      })
       return
     }
 
     try {
-      editMutation.mutate({
-        id: editFormData.sortingId!,
-        data: editFormData,
+      // Get existing sortings for this purchase
+      const existingSortings = groupedSortings.get(selectedPurchaseId) || []
+
+      // Prepare update data - match by sortingId if exists, otherwise create new
+      const updatePromises = editSortingItems.map((item, index) => {
+        const existingSorting = existingSortings[index]
+
+        const sortingData = {
+          itemId: item.itemId,
+          totalQuantity: item.quantity,
+          vendorId: selectedPurchase.vendorId,
+          paymentType: selectedPurchase.paymentType as
+            | 'cash'
+            | 'credit'
+            | 'bank'
+            | 'mfs',
+          sortingDate: existingSorting?.sortingDate || new Date(),
+          totalAmount: item.totalAmount,
+          notes: item.notes || `Sorted from purchase #${selectedPurchaseId}`,
+          bankAccountId: selectedPurchase.bankAccountId,
+          purchaseId: selectedPurchaseId,
+          updatedBy: userData?.userId || 0,
+          updatedAt: new Date(),
+        }
+
+        if (item.sortingId && existingSorting) {
+          // Update existing sorting
+          return editMutation.mutateAsync({
+            id: item.sortingId,
+            data: sortingData as any,
+          })
+        }
       })
+
+      await Promise.all(updatePromises.filter(Boolean))
+
+      toast({
+        title: 'Success',
+        description: 'Sortings updated successfully',
+      })
+      resetEditForm()
     } catch (err) {
-      setError('Failed to update sorting')
+      setError('Failed to update sortings')
       console.error(err)
-    }
-  }
-
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type } = e.target
-    if (type === 'number') {
-      setEditFormData((prev) => ({
-        ...prev,
-        [name]: value ? Number(value) : 0,
-      }))
-    } else if (type === 'date') {
-      setEditFormData((prev) => ({ ...prev, [name]: new Date(value) }))
-    } else {
-      setEditFormData((prev) => ({ ...prev, [name]: value }))
-    }
-  }
-
-  const handleEditSelectChange = (name: string, value: string) => {
-    if (name === 'paymentType') {
-      setEditFormData((prev) => ({
-        ...prev,
-        [name]: value as 'cash' | 'credit' | 'bank' | 'mfs',
-        bankAccountId: value === 'bank' ? prev.bankAccountId : null,
-      }))
-    } else {
-      setEditFormData((prev) => ({ ...prev, [name]: Number(value) }))
     }
   }
 
@@ -426,11 +525,36 @@ const Sortings = () => {
         <Table>
           <TableHeader className="bg-amber-100">
             <TableRow>
-              <TableHead>Item Name</TableHead>
-              <TableHead>Vendor</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Total Amount</TableHead>
-              <TableHead>Purchase Date</TableHead>
+              <TableHead
+                onClick={() => handlePurchaseSort('itemName')}
+                className="cursor-pointer"
+              >
+                Item Name <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handlePurchaseSort('vendorName')}
+                className="cursor-pointer"
+              >
+                Vendor <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handlePurchaseSort('totalQuantity')}
+                className="cursor-pointer"
+              >
+                Quantity <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handlePurchaseSort('totalAmount')}
+                className="cursor-pointer"
+              >
+                Total Amount <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handlePurchaseSort('purchaseDate')}
+                className="cursor-pointer"
+              >
+                Purchase Date <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -441,38 +565,34 @@ const Sortings = () => {
                   Loading purchases...
                 </TableCell>
               </TableRow>
-            ) : purchases.data.length === 0 ? (
+            ) : sortedPurchases.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-4">
                   No purchases found
                 </TableCell>
               </TableRow>
             ) : (
-              purchases.data
-                ?.filter(
-                  (purchase: GetPurchaseType) => purchase.isSorted === false
-                )
-                .map((purchase: GetPurchaseType) => (
-                  <TableRow key={purchase.purchaseId}>
-                    <TableCell>{purchase.itemName}</TableCell>
-                    <TableCell>{purchase.vendorName}</TableCell>
-                    <TableCell>{purchase.totalQuantity}</TableCell>
-                    <TableCell>{purchase.totalAmount.toFixed(2)}</TableCell>
-                    <TableCell>{formatDate(purchase.purchaseDate)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleOpenSortPopup(purchase)}
-                          className="bg-amber-50 hover:bg-amber-100 text-amber-700"
-                        >
-                          Sort
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+              sortedPurchases.map((purchase: GetPurchaseType) => (
+                <TableRow key={purchase.purchaseId}>
+                  <TableCell>{purchase.itemName}</TableCell>
+                  <TableCell>{purchase.vendorName}</TableCell>
+                  <TableCell>{purchase.totalQuantity}</TableCell>
+                  <TableCell>{purchase.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell>{formatDate(purchase.purchaseDate)}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleOpenSortPopup(purchase)}
+                        className="bg-amber-50 hover:bg-amber-100 text-amber-700"
+                      >
+                        Sort
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
@@ -557,40 +677,44 @@ const Sortings = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedSortings.map((sorting) => (
-                <TableRow key={sorting.sortingId}>
-                  <TableCell>{sorting.itemName}</TableCell>
-                  <TableCell>{sorting.vendorName}</TableCell>
-                  <TableCell>{sorting.totalQuantity}</TableCell>
-                  <TableCell>{sorting.totalAmount.toFixed(2)}</TableCell>
-                  <TableCell className="capitalize">
-                    {sorting.paymentType}
-                  </TableCell>
-                  <TableCell>{formatDate(sorting.sortingDate)}</TableCell>
-                  <TableCell>
-                    {sorting.bankName
-                      ? `${sorting.bankName} - ${sorting.branch} - ${sorting.accountNumber}`
-                      : '-'}
-                  </TableCell>
-                  <TableCell>{sorting.notes || '-'}</TableCell>
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleOpenEditPopup(sorting)}
-                    >
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              paginatedSortings.map((group) => {
+                const { purchaseId, sortings } = group
+                return sortings.map((sorting, index) => (
+                  <TableRow key={sorting.sortingId}>
+                    <TableCell>{sorting.itemName}</TableCell>
+                    <TableCell>{sorting.vendorName}</TableCell>
+                    <TableCell>{sorting.totalQuantity}</TableCell>
+                    <TableCell>{sorting.totalAmount.toFixed(2)}</TableCell>
+                    <TableCell className="capitalize">
+                      {sorting.paymentType}
+                    </TableCell>
+                    <TableCell>{formatDate(sorting.sortingDate)}</TableCell>
+                    <TableCell>
+                      {sorting.bankName
+                        ? `${sorting.bankName} - ${sorting.branch} - ${sorting.accountNumber}`
+                        : '-'}
+                    </TableCell>
+                    <TableCell>{sorting.notes || '-'}</TableCell>
+                    <TableCell>
+                      {/* Show edit button only on first row of each group */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenEditPopup(purchaseId)}
+                        >
+                          Edit
+                        </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
       {/* Pagination */}
-      {sortedSortings.length > 0 && (
+      {flattenedGroupedSortings.length > 0 && (
         <div className="mt-4">
           <Pagination>
             <PaginationContent>
@@ -812,193 +936,147 @@ const Sortings = () => {
         </form>
       </Popup>
 
-      {/* Edit Sorting Popup */}
       <Popup
         isOpen={isEditPopupOpen}
         onClose={resetEditForm}
-        title="Edit Sorting"
-        size="sm:max-w-2xl"
+        title={`Edit Sortings: ${selectedPurchase?.itemName || ''} (Purchase #${selectedPurchaseId})`}
+        size="sm:max-w-5xl"
       >
         <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Item */}
-            <div className="space-y-2">
-              <Label htmlFor="itemId">Item*</Label>
-              <CustomCombobox
-                items={
-                  items?.data?.map((item) => ({
-                    id: item?.itemId?.toString() || '0',
-                    name: item.itemName || 'Unnamed item',
-                  })) || []
-                }
-                value={
-                  editFormData.itemId > 0
-                    ? {
-                        id: editFormData.itemId.toString(),
-                        name:
-                          items?.data?.find(
-                            (i) => i.itemId === editFormData.itemId
-                          )?.itemName || '',
-                      }
-                    : null
-                }
-                onChange={(value) =>
-                  handleEditSelectChange(
-                    'itemId',
-                    value ? String(value.id) : '0'
-                  )
-                }
-                placeholder="Select item"
-              />
-            </div>
+          <div className="bg-amber-50 p-3 rounded-md mb-4">
+            <p className="text-sm text-amber-900">
+              <strong>Purchase Quantity:</strong>{' '}
+              {selectedPurchase?.totalQuantity || 0}
+            </p>
+            <p className="text-sm text-amber-700 mt-1">
+              The sum of all item quantities must equal the purchase quantity.
+            </p>
+          </div>
 
-            {/* Vendor */}
-            <div className="space-y-2">
-              <Label htmlFor="vendorId">Vendor*</Label>
-              <CustomCombobox
-                items={
-                  vendors?.data?.map((vendor) => ({
-                    id: vendor?.vendorId?.toString() || '0',
-                    name: vendor.name || 'Unnamed vendor',
-                  })) || []
-                }
-                value={
-                  editFormData.vendorId > 0
-                    ? {
-                        id: editFormData.vendorId.toString(),
-                        name:
-                          vendors?.data?.find(
-                            (v) => v.vendorId === editFormData.vendorId
-                          )?.name || '',
-                      }
-                    : null
-                }
-                onChange={(value) =>
-                  handleEditSelectChange(
-                    'vendorId',
-                    value ? String(value.id) : '0'
-                  )
-                }
-                placeholder="Select vendor"
-              />
-            </div>
-
-            {/* Quantity */}
-            <div className="space-y-2">
-              <Label htmlFor="totalQuantity">Quantity*</Label>
-              <Input
-                id="totalQuantity"
-                name="totalQuantity"
-                type="number"
-                min="1"
-                value={editFormData.totalQuantity}
-                onChange={handleEditInputChange}
-                required
-              />
-            </div>
-
-            {/* Total Amount */}
-            <div className="space-y-2">
-              <Label htmlFor="totalAmount">Total Amount*</Label>
-              <Input
-                id="totalAmount"
-                name="totalAmount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={editFormData.totalAmount}
-                onChange={handleEditInputChange}
-                required
-              />
-            </div>
-
-            {/* Payment Type */}
-            <div className="space-y-2">
-              <Label htmlFor="paymentType">Payment Type*</Label>
-              <Select
-                name="paymentType"
-                value={editFormData.paymentType}
-                onValueChange={(value) =>
-                  handleEditSelectChange('paymentType', value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="credit">Credit</SelectItem>
-                  <SelectItem value="bank">Bank</SelectItem>
-                  <SelectItem value="mfs">MFS</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Sorting Date */}
-            <div className="space-y-2">
-              <Label htmlFor="sortingDate">Sorting Date*</Label>
-              <Input
-                id="sortingDate"
-                name="sortingDate"
-                type="date"
-                value={
-                  editFormData.sortingDate instanceof Date
-                    ? editFormData.sortingDate.toISOString().split('T')[0]
-                    : new Date(editFormData.sortingDate)
-                        .toISOString()
-                        .split('T')[0]
-                }
-                onChange={handleEditInputChange}
-                required
-              />
-            </div>
-
-            {/* Bank Account (only if bank payment) */}
-            {editFormData.paymentType === 'bank' && (
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="bankAccountId">Bank Account*</Label>
-                <CustomCombobox
-                  items={
-                    bankAccounts?.data?.map((bank) => ({
-                      id: bank.bankAccountId?.toString() || '0',
-                      name: `${bank.bankName} - ${bank.accountNumber} - ${bank.branch}`,
-                    })) || []
-                  }
-                  value={
-                    editFormData.bankAccountId
-                      ? {
-                          id: editFormData.bankAccountId.toString(),
-                          name:
-                            bankAccounts?.data?.find(
-                              (b) =>
-                                b.bankAccountId === editFormData.bankAccountId
-                            )?.bankName || '',
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader className="bg-amber-50">
+                <TableRow>
+                  <TableHead className="w-1/4">Item</TableHead>
+                  <TableHead className="w-1/6">Quantity</TableHead>
+                  <TableHead className="w-1/4">Notes</TableHead>
+                  <TableHead className="w-1/6">Total Amount</TableHead>
+                  <TableHead className="w-1/12">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {editSortingItems.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <CustomCombobox
+                        items={
+                          items?.data?.map((i) => ({
+                            id: i?.itemId?.toString() || '0',
+                            name: i.itemName || 'Unnamed item',
+                          })) || []
                         }
-                      : null
-                  }
-                  onChange={(value) =>
-                    handleEditSelectChange(
-                      'bankAccountId',
-                      value ? String(value.id) : '0'
-                    )
-                  }
-                  placeholder="Select bank account"
-                />
-              </div>
-            )}
+                        value={
+                          item.itemId > 0
+                            ? {
+                                id: item.itemId.toString(),
+                                name:
+                                  items?.data?.find(
+                                    (i) => i.itemId === item.itemId
+                                  )?.itemName || '',
+                              }
+                            : null
+                        }
+                        onChange={(value) =>
+                          handleUpdateEditSortingItem(
+                            index,
+                            'itemId',
+                            value ? Number(value.id) : 0
+                          )
+                        }
+                        placeholder="Select item"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity || ''}
+                        onChange={(e) =>
+                          handleUpdateEditSortingItem(
+                            index,
+                            'quantity',
+                            Number(e.target.value)
+                          )
+                        }
+                        placeholder="Enter quantity"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        value={item.notes}
+                        onChange={(e) =>
+                          handleUpdateEditSortingItem(
+                            index,
+                            'notes',
+                            e.target.value
+                          )
+                        }
+                        placeholder="Enter notes (optional)"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.totalAmount || ''}
+                        onChange={(e) =>
+                          handleUpdateEditSortingItem(
+                            index,
+                            'totalAmount',
+                            Number(e.target.value)
+                          )
+                        }
+                        placeholder="Enter amount"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {editSortingItems.length > 1 && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveEditSortingItem(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-            {/* Notes */}
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={editFormData.notes ?? ''}
-                onChange={handleEditInputChange}
-                placeholder="Add any additional notes..."
-                rows={3}
-              />
-            </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAddEditSortingItem}
+            className="w-full bg-transparent"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add More
+          </Button>
+
+          <div className="bg-amber-50 p-3 rounded-md">
+            <p className="text-sm text-amber-900">
+              <strong>Total Quantity:</strong>{' '}
+              {editSortingItems.reduce(
+                (sum, item) => sum + (item.quantity || 0),
+                0
+              )}
+            </p>
           </div>
 
           {error && (
