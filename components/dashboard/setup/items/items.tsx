@@ -225,7 +225,7 @@ const Items = () => {
               paginatedItems.map((item) => (
                 <TableRow key={item.itemId}>
                   <TableCell>{item.itemName}</TableCell>
-                  <TableCell>${item.sellPriece.toFixed(2)}</TableCell>
+                  <TableCell>{item.sellPriece.toFixed(2)}</TableCell>
                   <TableCell>{formatDate(item.createdAt)}</TableCell>
                   <TableCell>{formatDate(item.updatedAt)}</TableCell>
                 </TableRow>

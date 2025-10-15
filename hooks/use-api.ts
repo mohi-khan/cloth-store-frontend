@@ -12,6 +12,7 @@ import {
   createMobileAllowancePolicy,
   createPurchase,
   createReimbursementPolicies,
+  createSorting,
   createTaPolicy,
   createTravelClaim,
   createVendor,
@@ -22,6 +23,7 @@ import {
   editEmployee,
   editMobileAllowancePolicy,
   editReimbursementPolicies,
+  editSorting,
   editTaPolicy,
   editVendor,
   getAllBankAccounts,
@@ -33,6 +35,7 @@ import {
   getAllMobileAllowancePolicies,
   getAllPurchases,
   getAllReimbursementPolicies,
+  getAllSortings,
   getAllTaPolicies,
   getAllTravelClaims,
   getAllVendors,
@@ -51,8 +54,10 @@ import type {
   CreateBankAccountType,
   CreateItemType,
   CreatePurchaseType,
+  CreateSortingType,
   CreateVendorType,
   GetBankAccountType,
+  GetSortingType,
   GetVendorType,
 } from '@/utils/type'
 import { toast } from './use-toast'
@@ -316,7 +321,86 @@ export const useAddPurchase = ({
   return mutation
 }
 
+export const useGetSortings = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
 
+  return useQuery({
+    queryKey: ['sortings'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllSortings(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddSorting = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ purchaseId, data }: { purchaseId: number; data: CreateSortingType }) => {
+      return createSorting(purchaseId, data, token)
+    },
+    onSuccess: (data) => {
+      console.log('sorting added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['sortings'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding sorting:', error)
+    },
+  })
+
+  return mutation
+}
+
+export const useEditSorting = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: GetSortingType }) => {
+      return editSorting(id, data, token)
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success!',
+        description: 'sorting edited successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['sortings'] })
+
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error editing sorting:', error)
+    },
+  })
+
+  return mutation
+}
 
 
 

@@ -117,6 +117,34 @@ export type GetPurchaseType = z.infer<typeof purchaseSchema> & {
 }
 export type CreatePurchaseType = z.infer<typeof createPurchaseSchema>
 
+export const sortingSchema = z.object({
+  sortingId: z.number().int().optional(), // Auto-increment primary key
+  itemId: z.number().int(), // Foreign key, required
+  totalQuantity: z.number().int().min(1, "Total quantity must be at least 1"),
+  notes: z.string().optional().nullable(),
+  vendorId: z.number().int(), // Foreign key, required
+  purchaseId: z.number().int(), // Foreign key, required
+  paymentType: z.enum(['cash', 'credit', 'bank', 'mfs']),
+  bankAccountId: z.number().int().optional().nullable(), // Can be null (onDelete: set null)
+  sortingDate: z.date(),
+  totalAmount: z.number().min(0, "Total amount must be at least 0"),
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(), // Default is DB timestamp
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+});
+export const createSortingSchema = sortingSchema.omit({ sortingId: true })
+export type GetSortingType = z.infer<typeof sortingSchema> & {
+  itemName: string
+  vendorName: string
+  bankName: string
+  branch: string
+  accountNumber: string
+}
+export type CreateSortingType = z.infer<typeof createSortingSchema>
+
+
+
 export interface User {
   userId: number
   username: string
