@@ -43,7 +43,6 @@ interface SortingItem {
   itemId: number
   quantity: number
   notes: string
-  totalAmount: number
   createdBy: number
   purchaseId?: number // Added purchaseId to interface
 }
@@ -89,7 +88,6 @@ const Sortings = () => {
       itemId: 0,
       quantity: 0,
       notes: '',
-      totalAmount: 0,
       createdBy: userData?.userId || 0,
     },
   ])
@@ -99,7 +97,6 @@ const Sortings = () => {
       itemId: 0,
       quantity: 0,
       notes: '',
-      totalAmount: 0,
       createdBy: userData?.userId || 0,
     },
   ])
@@ -129,7 +126,6 @@ const Sortings = () => {
       return (
         sorting.itemName?.toLowerCase().includes(searchLower) ||
         sorting.vendorName?.toLowerCase().includes(searchLower) ||
-        sorting.totalAmount?.toString().includes(searchLower) ||
         sorting.paymentType?.toLowerCase().includes(searchLower)
       )
     })
@@ -227,7 +223,6 @@ const Sortings = () => {
         itemId: 0,
         quantity: 0,
         notes: '',
-        totalAmount: 0,
         createdBy: userData?.userId || 0,
       },
     ])
@@ -258,7 +253,6 @@ const Sortings = () => {
       itemId: sorting.itemId,
       quantity: sorting.totalQuantity,
       notes: sorting.notes || '',
-      totalAmount: sorting.totalAmount,
       createdBy: sorting.createdBy,
       purchaseId: purchaseId, // Explicitly set purchaseId
     }))
@@ -275,7 +269,6 @@ const Sortings = () => {
         itemId: 0,
         quantity: 0,
         notes: '',
-        totalAmount: 0,
         createdBy: userData?.userId || 0,
       },
     ])
@@ -288,7 +281,6 @@ const Sortings = () => {
         itemId: 0,
         quantity: 0,
         notes: '',
-        totalAmount: 0,
         createdBy: userData?.userId || 0,
         purchaseId: selectedPurchaseId || undefined,
       },
@@ -315,7 +307,7 @@ const Sortings = () => {
     value: number | string
   ) => {
     const updated = [...sortingItems]
-    if (field === 'itemId' || field === 'quantity' || field === 'totalAmount') {
+    if (field === 'itemId' || field === 'quantity') {
       updated[index][field] = Number(value)
     } else if (field === 'notes') {
       updated[index][field] = String(value)
@@ -329,7 +321,7 @@ const Sortings = () => {
     value: number | string
   ) => {
     const updated = [...editSortingItems]
-    if (field === 'itemId' || field === 'quantity' || field === 'totalAmount') {
+    if (field === 'itemId' || field === 'quantity') {
       updated[index][field] = Number(value)
     } else if (field === 'notes') {
       updated[index][field] = String(value)
@@ -343,7 +335,6 @@ const Sortings = () => {
         itemId: 0,
         quantity: 0,
         notes: '',
-        totalAmount: 0,
         createdBy: userData?.userId || 0,
       },
     ])
@@ -358,7 +349,6 @@ const Sortings = () => {
         itemId: 0,
         quantity: 0,
         notes: '',
-        totalAmount: 0,
         createdBy: userData?.userId || 0,
       },
     ])
@@ -435,7 +425,6 @@ const Sortings = () => {
           | 'bank'
           | 'mfs',
         sortingDate: new Date(),
-        totalAmount: item.totalAmount,
         notes:
           item.notes || `Sorted from purchase #${selectedPurchase.purchaseId}`,
         bankAccountId: selectedPurchase.bankAccountId,
@@ -515,7 +504,6 @@ const Sortings = () => {
         bankAccountId: selectedPurchase.bankAccountId,
         purchaseId: selectedPurchaseId, // Explicitly use selectedPurchaseId
         sortingDate: new Date().toISOString().split('T')[0],
-        totalAmount: item.totalAmount,
         createdBy: userData?.userId || 0,
       }))
       console.log('🚀 ~ handleEditSubmit ~ sortingDataArray:', sortingDataArray)
@@ -671,12 +659,6 @@ const Sortings = () => {
                 Quantity <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
-                onClick={() => handleSort('totalAmount')}
-                className="cursor-pointer"
-              >
-                Total Amount <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-              </TableHead>
-              <TableHead
                 onClick={() => handleSort('paymentType')}
                 className="cursor-pointer"
               >
@@ -700,6 +682,7 @@ const Sortings = () => {
               >
                 Notes <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -754,7 +737,6 @@ const Sortings = () => {
                         <TableCell>{sorting.itemName}</TableCell>
                         <TableCell>{sorting.vendorName}</TableCell>
                         <TableCell>{sorting.totalQuantity}</TableCell>
-                        <TableCell>{sorting.totalAmount.toFixed(2)}</TableCell>
                         <TableCell className="capitalize">
                           {sorting.paymentType}
                         </TableCell>
@@ -862,7 +844,6 @@ const Sortings = () => {
                   <TableHead className="w-1/4">Item</TableHead>
                   <TableHead className="w-1/6">Quantity</TableHead>
                   <TableHead className="w-1/4">Notes</TableHead>
-                  <TableHead className="w-1/6">Total Amount</TableHead>
                   <TableHead className="w-1/12">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -925,22 +906,6 @@ const Sortings = () => {
                           )
                         }
                         placeholder="Enter notes (optional)"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.totalAmount || ''}
-                        onChange={(e) =>
-                          handleUpdateSortingItem(
-                            index,
-                            'totalAmount',
-                            Number(e.target.value)
-                          )
-                        }
-                        placeholder="Enter amount"
                       />
                     </TableCell>
                     <TableCell>
@@ -1022,7 +987,6 @@ const Sortings = () => {
                   <TableHead className="w-1/4">Item</TableHead>
                   <TableHead className="w-1/6">Quantity</TableHead>
                   <TableHead className="w-1/4">Notes</TableHead>
-                  <TableHead className="w-1/6">Total Amount</TableHead>
                   <TableHead className="w-1/12">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1085,22 +1049,6 @@ const Sortings = () => {
                           )
                         }
                         placeholder="Enter notes (optional)"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.totalAmount || ''}
-                        onChange={(e) =>
-                          handleUpdateEditSortingItem(
-                            index,
-                            'totalAmount',
-                            Number(e.target.value)
-                          )
-                        }
-                        placeholder="Enter amount"
                       />
                     </TableCell>
                     <TableCell>

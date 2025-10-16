@@ -127,7 +127,6 @@ export const sortingSchema = z.object({
   paymentType: z.enum(['cash', 'credit', 'bank', 'mfs']),
   bankAccountId: z.number().int().optional().nullable(), // Can be null (onDelete: set null)
   sortingDate: z.date(),
-  totalAmount: z.number().min(0, "Total amount must be at least 0"),
   createdBy: z.number().int(),
   createdAt: z.date().optional(), // Default is DB timestamp
   updatedBy: z.number().int().optional().nullable(),
