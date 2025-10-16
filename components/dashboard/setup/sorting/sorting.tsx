@@ -212,6 +212,7 @@ const Sortings = () => {
   }
 
   const handleOpenEditPopup = (purchaseId: number) => {
+    console.log('🚀 ~ handleOpenEditPopup ~ purchaseId:', purchaseId)
     const sortingsForPurchase = groupedSortings.get(purchaseId) || []
     const purchase = purchases?.data?.find(
       (p: GetPurchaseType) => p.purchaseId === purchaseId
@@ -382,7 +383,6 @@ const Sortings = () => {
           | 'mfs',
         sortingDate: new Date(),
         totalAmount: item.totalAmount,
-        createdBy: userData?.userId || 0,
         notes:
           item.notes || `Sorted from purchase #${selectedPurchase.purchaseId}`,
         bankAccountId: selectedPurchase.bankAccountId,
@@ -445,41 +445,27 @@ const Sortings = () => {
     }
 
     try {
-      // Get existing sortings for this purchase
-      const existingSortings = groupedSortings.get(selectedPurchaseId) || []
+      const sortingDataArray = editSortingItems.map((item) => ({
+        sortingId: item.sortingId,
+        itemId: item.itemId,
+        totalQuantity: item.quantity,
+        notes: item.notes || `Sorted from purchase #${selectedPurchaseId}`,
+        vendorId: selectedPurchase.vendorId,
+        paymentType: selectedPurchase.paymentType as
+          | 'cash'
+          | 'credit'
+          | 'bank'
+          | 'mfs',
+        bankAccountId: selectedPurchase.bankAccountId,
+        sortingDate: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
+        totalAmount: item.totalAmount,
+        createdBy: userData?.userId || 0,
+      }))
 
-      // Prepare update data - match by sortingId if exists, otherwise create new
-      const updatePromises = editSortingItems.map((item, index) => {
-        const existingSorting = existingSortings[index]
-
-        const sortingData = {
-          itemId: item.itemId,
-          totalQuantity: item.quantity,
-          vendorId: selectedPurchase.vendorId,
-          paymentType: selectedPurchase.paymentType as
-            | 'cash'
-            | 'credit'
-            | 'bank'
-            | 'mfs',
-          sortingDate: existingSorting?.sortingDate || new Date(),
-          totalAmount: item.totalAmount,
-          notes: item.notes || `Sorted from purchase #${selectedPurchaseId}`,
-          bankAccountId: selectedPurchase.bankAccountId,
-          purchaseId: selectedPurchaseId,
-          updatedBy: userData?.userId || 0,
-          updatedAt: new Date(),
-        }
-
-        if (item.sortingId && existingSorting) {
-          // Update existing sorting
-          return editMutation.mutateAsync({
-            id: item.sortingId,
-            data: sortingData as any,
-          })
-        }
+      await editMutation.mutateAsync({
+        id: selectedPurchaseId!,
+        data: sortingDataArray as any,
       })
-
-      await Promise.all(updatePromises.filter(Boolean))
 
       toast({
         title: 'Success',
@@ -654,59 +640,75 @@ const Sortings = () => {
               >
                 Notes <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {!sortings?.data ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-4">
+                <TableCell colSpan={8} className="text-center py-4">
                   Loading sortings...
                 </TableCell>
               </TableRow>
             ) : sortings.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-4">
+                <TableCell colSpan={8} className="text-center py-4">
                   No sortings found
                 </TableCell>
               </TableRow>
             ) : paginatedSortings.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-4">
+                <TableCell colSpan={8} className="text-center py-4">
                   No sortings match your search
                 </TableCell>
               </TableRow>
             ) : (
               paginatedSortings.map((group) => {
                 const { purchaseId, sortings } = group
-                return sortings.map((sorting, index) => (
-                  <TableRow key={sorting.sortingId}>
-                    <TableCell>{sorting.itemName}</TableCell>
-                    <TableCell>{sorting.vendorName}</TableCell>
-                    <TableCell>{sorting.totalQuantity}</TableCell>
-                    <TableCell>{sorting.totalAmount.toFixed(2)}</TableCell>
-                    <TableCell className="capitalize">
-                      {sorting.paymentType}
-                    </TableCell>
-                    <TableCell>{formatDate(sorting.sortingDate)}</TableCell>
-                    <TableCell>
-                      {sorting.bankName
-                        ? `${sorting.bankName} - ${sorting.branch} - ${sorting.accountNumber}`
-                        : '-'}
-                    </TableCell>
-                    <TableCell>{sorting.notes || '-'}</TableCell>
-                    <TableCell>
-                      {/* Show edit button only on first row of each group */}
+                return (
+                  <>
+                    {/* Header row for purchaseId with Edit button */}
+                    <TableRow
+                      key={`header-${purchaseId}`}
+                      className="bg-amber-50 hover:bg-amber-50"
+                    >
+                      <TableCell
+                        colSpan={7}
+                        className="font-semibold text-amber-900"
+                      >
+                        Purchase #{purchaseId} Sortings
+                      </TableCell>
+                      <TableCell className="text-right">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleOpenEditPopup(purchaseId)}
+                          className="bg-white hover:bg-amber-100"
                         >
                           Edit
                         </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                    </TableRow>
+                    {/* Sorting rows under this purchase */}
+                    {sortings.map((sorting) => (
+                      <TableRow key={sorting.sortingId}>
+                        <TableCell>{sorting.itemName}</TableCell>
+                        <TableCell>{sorting.vendorName}</TableCell>
+                        <TableCell>{sorting.totalQuantity}</TableCell>
+                        <TableCell>{sorting.totalAmount.toFixed(2)}</TableCell>
+                        <TableCell className="capitalize">
+                          {sorting.paymentType}
+                        </TableCell>
+                        <TableCell>{formatDate(sorting.sortingDate)}</TableCell>
+                        <TableCell>
+                          {sorting.bankName
+                            ? `${sorting.bankName} - ${sorting.branch} - ${sorting.accountNumber}`
+                            : '-'}
+                        </TableCell>
+                        <TableCell>{sorting.notes || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </>
+                )
               })
             )}
           </TableBody>
