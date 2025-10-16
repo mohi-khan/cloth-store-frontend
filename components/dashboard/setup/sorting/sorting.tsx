@@ -44,16 +44,19 @@ interface SortingItem {
   quantity: number
   notes: string
   totalAmount: number
+  createdBy: number
+  purchaseId?: number // Added purchaseId to interface
 }
 
 const Sortings = () => {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  console.log('🚀 ~ Sortings ~ userData:', userData)
   const [token] = useAtom(tokenAtom)
   const { toast } = useToast()
 
-  const { data: sortings } = useGetSortings()
-  const { data: purchases } = useGetPurchases()
+  const { data: sortings, refetch: refetchSortings } = useGetSortings()
+  const { data: purchases, refetch: refetchPurchases } = useGetPurchases()
   const { data: items } = useGetItems()
   const { data: vendors } = useGetVendors()
   const { data: bankAccounts } = useGetBankAccounts()
@@ -82,11 +85,23 @@ const Sortings = () => {
 
   // For sorting popup - multiple items
   const [sortingItems, setSortingItems] = useState<SortingItem[]>([
-    { itemId: 0, quantity: 0, notes: '', totalAmount: 0 },
+    {
+      itemId: 0,
+      quantity: 0,
+      notes: '',
+      totalAmount: 0,
+      createdBy: userData?.userId || 0,
+    },
   ])
 
   const [editSortingItems, setEditSortingItems] = useState<SortingItem[]>([
-    { itemId: 0, quantity: 0, notes: '', totalAmount: 0 },
+    {
+      itemId: 0,
+      quantity: 0,
+      notes: '',
+      totalAmount: 0,
+      createdBy: userData?.userId || 0,
+    },
   ])
 
   const handleSort = (column: keyof GetSortingType) => {
@@ -207,7 +222,15 @@ const Sortings = () => {
   // Handle opening sort popup
   const handleOpenSortPopup = (purchase: GetPurchaseType) => {
     setSelectedPurchase(purchase)
-    setSortingItems([{ itemId: 0, quantity: 0, notes: '', totalAmount: 0 }])
+    setSortingItems([
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        totalAmount: 0,
+        createdBy: userData?.userId || 0,
+      },
+    ])
     setIsSortPopupOpen(true)
   }
 
@@ -230,13 +253,14 @@ const Sortings = () => {
     setSelectedPurchaseId(purchaseId)
     setSelectedPurchase(purchase)
 
-    // Map existing sortings to edit items
     const editItems: SortingItem[] = sortingsForPurchase.map((sorting) => ({
       sortingId: sorting.sortingId,
       itemId: sorting.itemId,
       quantity: sorting.totalQuantity,
       notes: sorting.notes || '',
       totalAmount: sorting.totalAmount,
+      createdBy: sorting.createdBy,
+      purchaseId: purchaseId, // Explicitly set purchaseId
     }))
 
     setEditSortingItems(editItems)
@@ -247,14 +271,27 @@ const Sortings = () => {
   const handleAddSortingItem = () => {
     setSortingItems([
       ...sortingItems,
-      { itemId: 0, quantity: 0, notes: '', totalAmount: 0 },
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        totalAmount: 0,
+        createdBy: userData?.userId || 0,
+      },
     ])
   }
 
   const handleAddEditSortingItem = () => {
     setEditSortingItems([
       ...editSortingItems,
-      { itemId: 0, quantity: 0, notes: '', totalAmount: 0 },
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        totalAmount: 0,
+        createdBy: userData?.userId || 0,
+        purchaseId: selectedPurchaseId || undefined,
+      },
     ])
   }
 
@@ -301,14 +338,30 @@ const Sortings = () => {
   }
 
   const resetSortForm = () => {
-    setSortingItems([{ itemId: 0, quantity: 0, notes: '', totalAmount: 0 }])
+    setSortingItems([
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        totalAmount: 0,
+        createdBy: userData?.userId || 0,
+      },
+    ])
     setSelectedPurchase(null)
     setIsSortPopupOpen(false)
     setError(null)
   }
 
   const resetEditForm = () => {
-    setEditSortingItems([{ itemId: 0, quantity: 0, notes: '', totalAmount: 0 }])
+    setEditSortingItems([
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        totalAmount: 0,
+        createdBy: userData?.userId || 0,
+      },
+    ])
     setSelectedPurchase(null)
     setSelectedPurchaseId(null)
     setIsEditPopupOpen(false)
@@ -388,6 +441,7 @@ const Sortings = () => {
         bankAccountId: selectedPurchase.bankAccountId,
         purchaseId: selectedPurchase.purchaseId,
         createdAt: new Date(),
+        createdBy: userData?.userId || 0,
         updatedBy: userData?.userId || 0,
         updatedAt: new Date(),
       }))
@@ -396,6 +450,8 @@ const Sortings = () => {
         purchaseId: selectedPurchase.purchaseId!,
         data: sortingDataArray as any,
       })
+
+      await Promise.all([refetchPurchases?.(), refetchSortings?.()])
 
       toast({
         title: 'Success',
@@ -446,7 +502,7 @@ const Sortings = () => {
 
     try {
       const sortingDataArray = editSortingItems.map((item) => ({
-        sortingId: item.sortingId,
+        sortingId: item.sortingId, // undefined for new items, which is correct
         itemId: item.itemId,
         totalQuantity: item.quantity,
         notes: item.notes || `Sorted from purchase #${selectedPurchaseId}`,
@@ -457,15 +513,19 @@ const Sortings = () => {
           | 'bank'
           | 'mfs',
         bankAccountId: selectedPurchase.bankAccountId,
-        sortingDate: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
+        purchaseId: selectedPurchaseId, // Explicitly use selectedPurchaseId
+        sortingDate: new Date().toISOString().split('T')[0],
         totalAmount: item.totalAmount,
         createdBy: userData?.userId || 0,
       }))
+      console.log('🚀 ~ handleEditSubmit ~ sortingDataArray:', sortingDataArray)
 
       await editMutation.mutateAsync({
         id: selectedPurchaseId!,
         data: sortingDataArray as any,
       })
+
+      await Promise.all([refetchPurchases?.(), refetchSortings?.()])
 
       toast({
         title: 'Success',
@@ -662,13 +722,13 @@ const Sortings = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedSortings.map((group) => {
+              paginatedSortings.map((group, index) => {
                 const { purchaseId, sortings } = group
                 return (
                   <>
                     {/* Header row for purchaseId with Edit button */}
                     <TableRow
-                      key={`header-${purchaseId}`}
+                      key={`header-${index}`}
                       className="bg-amber-50 hover:bg-amber-50"
                     >
                       <TableCell
@@ -689,8 +749,8 @@ const Sortings = () => {
                       </TableCell>
                     </TableRow>
                     {/* Sorting rows under this purchase */}
-                    {sortings.map((sorting) => (
-                      <TableRow key={sorting.sortingId}>
+                    {sortings.map((sorting, index) => (
+                      <TableRow key={index}>
                         <TableCell>{sorting.itemName}</TableCell>
                         <TableCell>{sorting.vendorName}</TableCell>
                         <TableCell>{sorting.totalQuantity}</TableCell>
