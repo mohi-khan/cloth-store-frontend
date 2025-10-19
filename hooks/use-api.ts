@@ -6,6 +6,7 @@ import {
   approveTravelClaim,
   createBankAccount,
   createClaim,
+  createCustomer,
   createDesignation,
   createEmployee,
   createItem,
@@ -19,6 +20,7 @@ import {
   editBankAccount,
   editClaim,
   EditClaimTypeBalance,
+  editCustomer,
   editDesignation,
   editEmployee,
   editMobileAllowancePolicy,
@@ -29,6 +31,7 @@ import {
   getAllBankAccounts,
   getAllClaims,
   getAllClaimTypeBalances,
+  getAllCustomers,
   getAllDesignations,
   getAllEmployees,
   getAllItems,
@@ -52,11 +55,13 @@ import {
 } from '@/utils/api'
 import type {
   CreateBankAccountType,
+  CreateCustomerType,
   CreateItemType,
   CreatePurchaseType,
   CreateSortingType,
   CreateVendorType,
   GetBankAccountType,
+  GetCustomerType,
   GetSortingType,
   GetVendorType,
 } from '@/utils/type'
@@ -401,6 +406,89 @@ export const useEditSorting = ({
 
   return mutation
 }
+
+export const useGetCustomers = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['customers'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllCustomers(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddCustomer = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateCustomerType) => {
+      return createCustomer(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('customer added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding customer:', error)
+    },
+  })
+
+  return mutation
+}
+
+export const useEditCustomer = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: GetCustomerType }) => {
+      return editCustomer(id, data, token)
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success!',
+        description: 'customer edited successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error editing customer:', error)
+    },
+  })
+
+  return mutation
+}
+
+
 
 
 

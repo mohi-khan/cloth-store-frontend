@@ -142,6 +142,21 @@ export type GetSortingType = z.infer<typeof sortingSchema> & {
 }
 export type CreateSortingType = z.infer<typeof createSortingSchema>
 
+export const customerSchema = z.object({
+  customerId: z.number().int().optional(), // Auto-increment primary key
+  name: z.string().min(1, "Customer name is required").max(100),
+  phone: z.string().max(20).optional().nullable(),
+  email: z.string().email("Invalid email format").max(100).optional().nullable(),
+  address: z.string().max(255).optional().nullable(),
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(), // Automatically handled by DB
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+});
+export const createCustomerSchema = customerSchema.omit({ customerId: true })
+export type CreateCustomerType = z.infer<typeof createCustomerSchema>
+export type GetCustomerType = z.infer<typeof customerSchema>
+
 
 
 export interface User {

@@ -13,6 +13,8 @@ import {
   CreatePurchaseType,
   GetSortingType,
   CreateSortingType,
+  GetCustomerType,
+  CreateCustomerType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -203,7 +205,47 @@ export async function editSorting(
   })
 }
 
+export async function getAllCustomers(token: string) {
+  return fetchApi<GetCustomerType[]>({
+    url: 'api/customer/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
+export async function createCustomer(
+  data: CreateCustomerType,
+  token: string
+) {
+  return fetchApi<CreateCustomerType>({
+    url: 'api/customer/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function editCustomer(
+  id: number,
+  data: GetCustomerType,
+  token: string
+) {
+  return fetchApi<GetCustomerType>({
+    url: `api/customer/edit/${id}`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
 
 
