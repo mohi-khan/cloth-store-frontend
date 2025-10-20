@@ -1,4 +1,3 @@
-// Sales.tsx (full updated file)
 'use client'
 
 import type React from 'react'
@@ -42,10 +41,14 @@ import {
   useGetItems,
   useGetSales,
   useGetCustomers,
-  useEditSaleLevel,
+  useEditSale,
 } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { CreateSalesType, GetSaleDetailsType, GetSalesType } from '@/utils/type'
+import type {
+  CreateSalesType,
+  GetSaleDetailsType,
+  GetSalesType,
+} from '@/utils/type'
 
 const Sales = () => {
   useInitializeUser()
@@ -53,7 +56,7 @@ const Sales = () => {
   const [token] = useAtom(tokenAtom)
 
   const { data: sales } = useGetSales()
-  console.log("🚀 ~ Sales ~ sales:", sales)
+  console.log('🚀 ~ Sales ~ sales:', sales)
   const { data: items } = useGetItems()
   const { data: customers } = useGetCustomers()
   const { data: bankAccounts } = useGetBankAccounts()
@@ -94,16 +97,16 @@ const Sales = () => {
     ],
   })
 
-  const [saleDetail, setSaleDetail] = useState<GetSaleDetailsType>({
-    itemId: 0,
-    itemName: '',
-    quantity: 1,
-    unitPrice: 0,
-    amount: 0,
-    createdBy: userData?.userId || 0,
-  })
-
-  const [showItemsTable, setShowItemsTable] = useState(false)
+  const [saleDetails, setSaleDetails] = useState<GetSaleDetailsType[]>(
+    items?.data?.map((item) => ({
+      itemId: item.itemId || 0,
+      itemName: item.itemName || '',
+      quantity: 0,
+      unitPrice: 0,
+      amount: 0,
+      createdBy: userData?.userId || 0,
+    })) || []
+  )
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -159,35 +162,26 @@ const Sales = () => {
   }
 
   const handleDetailChange = (
+    itemId: number,
     field: keyof GetSaleDetailsType,
     value: string | number
   ) => {
     const numValue = typeof value === 'string' ? Number(value) : value
 
-    if (field === 'itemId') {
-      const selectedItem = items?.data?.find((i) => i.itemId === numValue)
-      setSaleDetail({
-        ...saleDetail,
-        itemId: numValue,
-        itemName: selectedItem?.itemName,
+    setSaleDetails((prev) =>
+      prev.map((detail) => {
+        if (detail.itemId === itemId) {
+          const updatedDetail = { ...detail, [field]: numValue }
+          // Auto-calculate amount
+          if (field === 'quantity' || field === 'unitPrice') {
+            updatedDetail.amount =
+              updatedDetail.quantity * updatedDetail.unitPrice
+          }
+          return updatedDetail
+        }
+        return detail
       })
-    } else if (field === 'quantity' || field === 'unitPrice') {
-      const updatedDetail = { ...saleDetail, [field]: numValue }
-      updatedDetail.amount = updatedDetail.quantity * updatedDetail.unitPrice
-      setSaleDetail(updatedDetail)
-    } else {
-      setSaleDetail({ ...saleDetail, [field]: numValue })
-    }
-  }
-
-  const handleSelectItem = (itemId: number) => {
-    const selectedItem = items?.data?.find((i) => i.itemId === itemId)
-    setSaleDetail({
-      ...saleDetail,
-      itemId: itemId,
-      itemName: selectedItem?.itemName,
-    })
-    setShowItemsTable(false)
+    )
   }
 
   const resetForm = useCallback(() => {
@@ -214,28 +208,29 @@ const Sales = () => {
       ],
     })
 
-    setSaleDetail({
-      itemId: 0,
-      itemName: '',
-      quantity: 1,
-      unitPrice: 0,
-      amount: 0,
-      createdBy: userData?.userId || 0,
-    })
+    setSaleDetails(
+      items?.data?.map((item) => ({
+        itemId: item.itemId || 0,
+        itemName: item.itemName || '',
+        quantity: 0,
+        unitPrice: 0,
+        amount: 0,
+        createdBy: userData?.userId || 0,
+      })) || []
+    )
 
-    setShowItemsTable(false)
     setIsPopupOpen(false)
     setIsEditMode(false)
     setEditingId(null)
     setError(null)
-  }, [userData?.userId])
+  }, [userData?.userId, items?.data])
 
   const closePopup = useCallback(() => {
     resetForm()
   }, [resetForm])
 
   const mutation = useAddSale({ onClose: closePopup, reset: resetForm })
-  const editMutation = useEditSaleLevel({
+  const editMutation = useEditSale({
     onClose: closePopup,
     reset: resetForm,
   })
@@ -257,7 +252,8 @@ const Sales = () => {
     return list.filter((sale: GetSalesType) => {
       return (
         (
-          (sale.salesMaster as any)?.customerName?.toString().toLowerCase() ?? ''
+          (sale.salesMaster as any)?.customerName?.toString().toLowerCase() ??
+          ''
         ).includes(lower) ||
         sale.salesMaster.totalAmount?.toString().includes(lower) ||
         (sale.salesMaster.paymentType?.toString().toLowerCase() ?? '').includes(
@@ -270,7 +266,6 @@ const Sales = () => {
   const sortedSales = useMemo(() => {
     const getValueByPath = (obj: any, path?: string) => {
       if (!path) return undefined
-      // support nested path like "salesMaster.saleDate" and also allow top-level or nested within salesMaster when path has no dot
       if (!path.includes('.')) {
         return obj?.[path] ?? obj?.salesMaster?.[path] ?? undefined
       }
@@ -285,12 +280,10 @@ const Sales = () => {
       const aValue = getValueByPath(a, sortColumn) ?? ''
       const bValue = getValueByPath(b, sortColumn) ?? ''
 
-      // numbers
       if (typeof aValue === 'number' && typeof bValue === 'number') {
         return sortDirection === 'asc' ? aValue - bValue : bValue - aValue
       }
 
-      // dates (strings or Date objects)
       const aDate =
         aValue instanceof Date
           ? aValue
@@ -309,14 +302,12 @@ const Sales = () => {
           : bDate.getTime() - aDate.getTime()
       }
 
-      // strings
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortDirection === 'asc'
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue)
       }
 
-      // fallback compare
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
       return 0
@@ -342,12 +333,15 @@ const Sales = () => {
       return
     }
 
-    if (
-      saleDetail.itemId === 0 ||
-      saleDetail.quantity === 0 ||
-      saleDetail.unitPrice === 0
-    ) {
-      setError('Please fill all required fields in sale details')
+    const validSaleDetails = saleDetails.filter(
+      (detail) =>
+        detail.quantity > 0 && detail.unitPrice > 0 && detail.amount > 0
+    )
+
+    if (validSaleDetails.length === 0) {
+      setError(
+        'Please add at least one item with quantity and price (amount must be greater than 0)'
+      )
       return
     }
 
@@ -361,26 +355,29 @@ const Sales = () => {
     }
 
     try {
+      const totalQuantity = validSaleDetails.reduce(
+        (sum, d) => sum + d.quantity,
+        0
+      )
+      const totalAmount = validSaleDetails.reduce((sum, d) => sum + d.amount, 0)
+
       const updatedFormData: CreateSalesType = {
         ...formData,
         salesMaster: {
           ...formData.salesMaster,
-          totalQuantity: saleDetail.quantity,
-          totalAmount: saleDetail.amount,
+          totalQuantity,
+          totalAmount,
         },
-        saleDetails: [
-          {
-            itemId: saleDetail.itemId,
-            quantity: saleDetail.quantity,
-            unitPrice: saleDetail.unitPrice,
-            amount: saleDetail.amount,
-            createdBy: userData?.userId || 0,
-          },
-        ],
+        saleDetails: validSaleDetails.map((detail) => ({
+          itemId: detail.itemId,
+          quantity: detail.quantity,
+          unitPrice: detail.unitPrice,
+          amount: detail.amount,
+          createdBy: userData?.userId || 0,
+        })),
       }
 
       if (isEditMode && editingId) {
-        // editMutation expects some structure; adjust if your hook wants different payload
         editMutation.mutate({
           id: editingId,
           data: updatedFormData as any,
@@ -398,7 +395,6 @@ const Sales = () => {
     setIsEditMode(true)
     setEditingId(sale.salesMaster.salesMasterId ?? null)
 
-    // populate formData from flattened sale
     setFormData({
       salesMaster: {
         customerId: sale.salesMaster.customerId ?? 0,
@@ -435,27 +431,24 @@ const Sales = () => {
             ],
     })
 
-    // set local saleDetail for edit UI
     if (sale.saleDetails && sale.saleDetails.length > 0) {
-      const detail = sale.saleDetails[0]
-      setSaleDetail({
-        itemId: detail.itemId,
-        itemName: (detail as any).itemName,
-        quantity: detail.quantity,
-        unitPrice: detail.unitPrice,
-        amount: detail.amount,
-        createdBy: detail.createdBy ?? (userData?.userId || 0),
-      })
-    } else {
-      setSaleDetail({
-        itemId: 0,
-        itemName: '',
-        quantity: 1,
-        unitPrice: 0,
-        amount: 0,
-        createdBy: userData?.userId || 0,
-      })
+      setSaleDetails(
+        items?.data?.map((item) => {
+          const existingDetail = sale.saleDetails.find(
+            (d) => d.itemId === item.itemId
+          )
+          return {
+            itemId: item.itemId || 0,
+            itemName: item.itemName || '',
+            quantity: existingDetail?.quantity || 0,
+            unitPrice: existingDetail?.unitPrice || 0,
+            amount: existingDetail?.amount || 0,
+            createdBy: userData?.userId || 0,
+          }
+        }) || []
+      )
     }
+
     setIsPopupOpen(true)
   }
 
@@ -728,7 +721,6 @@ const Sales = () => {
                 name="saleDate"
                 type="date"
                 value={
-                  // format to yyyy-mm-dd
                   formData.salesMaster.saleDate instanceof Date
                     ? formData.salesMaster.saleDate.toISOString().split('T')[0]
                     : new Date(formData.salesMaster.saleDate)
@@ -827,100 +819,67 @@ const Sales = () => {
 
           {/* Sale Details Section */}
           <div className="space-y-3 border-t pt-4">
-            <h3 className="font-semibold">Sale Details</h3>
+            <h3 className="font-semibold">
+              Sale Details - Fill in quantity and price for items
+            </h3>
 
-            {/* Items Table for Selection */}
-            {showItemsTable && (
-              <div className="rounded-md border overflow-x-auto mb-4">
-                <Table>
-                  <TableHeader className="bg-gray-50">
-                    <TableRow>
-                      <TableHead>Item Name</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items?.data?.map((item) => (
-                      <TableRow key={item.itemId}>
-                        <TableCell>{item.itemName}</TableCell>
-                        <TableCell>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSelectItem(item.itemId || 0)}
-                          >
-                            Select
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {/* Sale Detail Row */}
             <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader className="bg-gray-50">
                   <TableRow>
-                    <TableHead>Item*</TableHead>
-                    <TableHead>Quantity*</TableHead>
-                    <TableHead>Unit Price*</TableHead>
+                    <TableHead>Item Name</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Unit Price</TableHead>
                     <TableHead>Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell>
-                      <div className="space-y-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowItemsTable(!showItemsTable)}
-                          className="w-full"
-                        >
-                          {saleDetail.itemId > 0
-                            ? saleDetail.itemName
-                            : 'Select Item'}
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={saleDetail.quantity}
-                        onChange={(e) =>
-                          handleDetailChange('quantity', e.target.value)
-                        }
-                        className="w-20"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={saleDetail.unitPrice}
-                        onChange={(e) =>
-                          handleDetailChange('unitPrice', e.target.value)
-                        }
-                        className="w-24"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={saleDetail.amount.toFixed(2)}
-                        readOnly
-                        className="w-24 bg-gray-100"
-                      />
-                    </TableCell>
-                  </TableRow>
+                  {saleDetails.map((detail) => (
+                    <TableRow key={detail.itemId}>
+                      <TableCell className="font-medium">
+                        {detail.itemName}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={detail.quantity || ''}
+                          onChange={(e) =>
+                            handleDetailChange(
+                              detail.itemId,
+                              'quantity',
+                              e.target.value
+                            )
+                          }
+                          placeholder="0"
+                          className="w-20"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={detail.unitPrice || ''}
+                          onChange={(e) =>
+                            handleDetailChange(
+                              detail.itemId,
+                              'unitPrice',
+                              e.target.value
+                            )
+                          }
+                          placeholder="0.00"
+                          className="w-24"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-semibold">
+                          {detail.amount.toFixed(2)}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>

@@ -518,7 +518,7 @@ export const useAddSale = ({
   return mutation
 }
 
-export const useEditSaleLevel = ({
+export const useEditSale = ({
   onClose,
   reset,
 }: {
