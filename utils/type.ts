@@ -120,7 +120,7 @@ export type CreatePurchaseType = z.infer<typeof createPurchaseSchema>
 export const sortingSchema = z.object({
   sortingId: z.number().int().optional(), // Auto-increment primary key
   itemId: z.number().int(), // Foreign key, required
-  totalQuantity: z.number().int().min(1, "Total quantity must be at least 1"),
+  totalQuantity: z.number().int().min(1, 'Total quantity must be at least 1'),
   notes: z.string().optional().nullable(),
   vendorId: z.number().int(), // Foreign key, required
   purchaseId: z.number().int(), // Foreign key, required
@@ -131,7 +131,7 @@ export const sortingSchema = z.object({
   createdAt: z.date().optional(), // Default is DB timestamp
   updatedBy: z.number().int().optional().nullable(),
   updatedAt: z.date().optional().nullable(),
-});
+})
 export const createSortingSchema = sortingSchema.omit({ sortingId: true })
 export type GetSortingType = z.infer<typeof sortingSchema> & {
   itemName: string
@@ -141,6 +141,109 @@ export type GetSortingType = z.infer<typeof sortingSchema> & {
   accountNumber: string
 }
 export type CreateSortingType = z.infer<typeof createSortingSchema>
+
+export const customerSchema = z.object({
+  customerId: z.number().int().optional(), // Auto-increment primary key
+  name: z.string().min(1, 'Customer name is required').max(100),
+  phone: z.string().max(20).optional().nullable(),
+  email: z
+    .string()
+    .email('Invalid email format')
+    .max(100)
+    .optional()
+    .nullable(),
+  address: z.string().max(255).optional().nullable(),
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(), // Automatically handled by DB
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+})
+export const createCustomerSchema = customerSchema.omit({ customerId: true })
+export type CreateCustomerType = z.infer<typeof createCustomerSchema>
+export type GetCustomerType = z.infer<typeof customerSchema>
+
+// salesMaster schema
+export const salesMasterSchema = z.object({
+  salesMasterId: z.number().int().optional(),
+  paymentType: z.enum(['cash', 'credit', 'bank', 'mfs']),
+  bankAccountId: z.number().int().nullable().optional(),
+  customerId: z.number().int(),
+  saleDate: z
+    .date(),
+  totalAmount: z.number().min(0, 'Total amount must be positive'),
+  totalQuantity: z.number().int().min(1, 'Total quantity must be at least 1'),
+  notes: z.string().optional().nullable(),
+  discountAmount: z.number().min(0).optional().default(0),
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(), // Automatically handled by DB
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+})
+export type GetSalesMasterType = z.infer<typeof salesMasterSchema> & {
+  customerName: string
+  bankName: string | null
+}
+
+// saleDetails schema
+export const saleDetailsSchema = z.object({
+  saleDetailsId: z.number().int().optional(),
+  salesMasterId: z.number().int().optional(),
+  itemId: z.number().int(),
+  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  amount: z.number().min(0, 'Amount must be positive'),
+  unitPrice: z.number().min(0, 'Unit price must be positive'),
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(), // Automatically handled by DB
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+})
+export type GetSaleDetailsType = z.infer<typeof saleDetailsSchema> & {
+  itemName: string | undefined
+}
+
+// sales combined schema
+export const salesSchema = z.object({
+  salesMaster: salesMasterSchema,
+  saleDetails: z
+    .array(saleDetailsSchema)
+    .min(1, 'At least one sale detail is required'),
+})
+
+// Create salesMasterSchema
+const salesMasterCreateSchema = salesMasterSchema.omit({
+  salesMasterId: true,
+  createdAt: true,
+  updatedAt: true,
+  updatedBy: true,
+});
+
+// Create saleDetailsSchema
+const saleDetailsCreateSchema = saleDetailsSchema.omit({
+  saleDetailsId: true,
+  salesMasterId: true,
+  createdAt: true,
+  updatedAt: true,
+  updatedBy: true,
+});
+
+// Combined create schema
+export const salesCreateSchema = z.object({
+  salesMaster: salesMasterCreateSchema,
+  saleDetails: z.array(saleDetailsCreateSchema).min(1, 'At least one sale detail is required'),
+});
+export type CreateSalesType = z.infer<typeof salesCreateSchema>
+export type GetSalesType = z.infer<typeof salesSchema>
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,6 +1,6 @@
 'use client'
 
-import type React from 'react'
+import React from 'react'
 import { useCallback, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -705,13 +705,13 @@ const Sortings = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedSortings.map((group, index) => {
+              paginatedSortings.map((group) => {
                 const { purchaseId, sortings } = group
                 return (
-                  <>
-                    {/* Header row for purchaseId with Edit button */}
+                  <React.Fragment key={purchaseId}>
+                    {/* Header row for purchaseId */}
                     <TableRow
-                      key={`header-${index}`}
+                      key={`header-${purchaseId}`}
                       className="bg-amber-50 hover:bg-amber-50"
                     >
                       <TableCell
@@ -731,9 +731,14 @@ const Sortings = () => {
                         </Button>
                       </TableCell>
                     </TableRow>
+
                     {/* Sorting rows under this purchase */}
-                    {sortings.map((sorting, index) => (
-                      <TableRow key={index}>
+                    {sortings.map((sorting) => (
+                      <TableRow
+                        key={
+                          sorting.sortingId || `${purchaseId}-${sorting.itemId}`
+                        }
+                      >
                         <TableCell>{sorting.itemName}</TableCell>
                         <TableCell>{sorting.vendorName}</TableCell>
                         <TableCell>{sorting.totalQuantity}</TableCell>
@@ -749,7 +754,7 @@ const Sortings = () => {
                         <TableCell>{sorting.notes || '-'}</TableCell>
                       </TableRow>
                     ))}
-                  </>
+                  </React.Fragment>
                 )
               })
             )}

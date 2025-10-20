@@ -51,8 +51,16 @@ export function DashboardSidebar() {
           href: '/dashboard/setup/vendors',
         },
         {
+          title: 'Customers',
+          href: '/dashboard/setup/customers',
+        },
+        {
           title: 'Purchases',
           href: '/dashboard/setup/purchases',
+        },
+        {
+          title: 'sales',
+          href: '/dashboard/setup/sales',
         },
         {
           title: 'Sorting',
