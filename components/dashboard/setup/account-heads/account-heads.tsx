@@ -21,14 +21,14 @@ import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
 import { useAtom } from "jotai"
 import { useRouter } from "next/navigation"
 import formatDate from "@/utils/formatDate"
-import { useAddAccountHead, useGeAccountHeads } from "@/hooks/use-api"
+import { useAddAccountHead, useGetAccountHeads } from "@/hooks/use-api"
 
 const AccountHeads = () => {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
 
-  const { data: accountHeads } = useGeAccountHeads()
+  const { data: accountHeads } = useGetAccountHeads()
 
   const router = useRouter()
 
@@ -169,7 +169,7 @@ const AccountHeads = () => {
               className="pl-10 w-64"
             />
           </div>
-          <Button className="bg-amber-400 hover:bg-amber-500 text-black" onClick={() => setIsPopupOpen(true)}>
+          <Button className="bg-yellow-400 hover:bg-yellow-500 text-black" onClick={() => setIsPopupOpen(true)}>
             Add
           </Button>
         </div>

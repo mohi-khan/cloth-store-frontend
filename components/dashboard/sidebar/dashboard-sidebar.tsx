@@ -70,6 +70,10 @@ export function DashboardSidebar() {
           title: 'Sorting',
           href: '/dashboard/setup/sorting',
         },
+        {
+          title: 'Expenses',
+          href: '/dashboard/setup/expenses',
+        },
       ],
     },
     {

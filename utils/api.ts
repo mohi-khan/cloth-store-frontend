@@ -19,6 +19,8 @@ import {
   CreateSalesType,
   GetAccountHeadType,
   CreateAccountHeadType,
+  GetExpenseType,
+  CreateExpenseType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -310,6 +312,32 @@ export async function createAccountHead(
 ) {
   return fetchApi<CreateAccountHeadType>({
     url: 'api/account-head/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllExpenses(token: string) {
+  return fetchApi<GetExpenseType[]>({
+    url: 'api/expense/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createExpense(
+  data: CreateExpenseType,
+  token: string
+) {
+  return fetchApi<CreateExpenseType>({
+    url: 'api/expense/create',
     method: 'POST',
     body: data,
     headers: {

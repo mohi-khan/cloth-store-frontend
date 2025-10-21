@@ -168,8 +168,7 @@ export const salesMasterSchema = z.object({
   paymentType: z.enum(['cash', 'credit', 'bank', 'mfs']),
   bankAccountId: z.number().int().nullable().optional(),
   customerId: z.number().int(),
-  saleDate: z
-    .date(),
+  saleDate: z.date(),
   totalAmount: z.number().min(0, 'Total amount must be positive'),
   totalQuantity: z.number().int().min(1, 'Total quantity must be at least 1'),
   notes: z.string().optional().nullable(),
@@ -215,7 +214,7 @@ const salesMasterCreateSchema = salesMasterSchema.omit({
   createdAt: true,
   updatedAt: true,
   updatedBy: true,
-});
+})
 
 // Create saleDetailsSchema
 const saleDetailsCreateSchema = saleDetailsSchema.omit({
@@ -224,13 +223,15 @@ const saleDetailsCreateSchema = saleDetailsSchema.omit({
   createdAt: true,
   updatedAt: true,
   updatedBy: true,
-});
+})
 
 // Combined create schema
 export const salesCreateSchema = z.object({
   salesMaster: salesMasterCreateSchema,
-  saleDetails: z.array(saleDetailsCreateSchema).min(1, 'At least one sale detail is required'),
-});
+  saleDetails: z
+    .array(saleDetailsCreateSchema)
+    .min(1, 'At least one sale detail is required'),
+})
 export type CreateSalesType = z.infer<typeof salesCreateSchema>
 export type GetSalesType = z.infer<typeof salesSchema>
 
@@ -242,16 +243,33 @@ export const accountHeadSchema = z.object({
   updatedBy: z.number().int().optional().nullable(),
   updatedAt: z.date().optional().nullable(),
 })
-export const createAccountHeadSchema = accountHeadSchema.omit({ accountHeadId: true })
+export const createAccountHeadSchema = accountHeadSchema.omit({
+  accountHeadId: true,
+})
 export type GetAccountHeadType = z.infer<typeof accountHeadSchema>
 export type CreateAccountHeadType = z.infer<typeof createAccountHeadSchema>
 
-
-
-
-
-
-
+export const expenseSchema = z.object({
+  expenseId: z.number().int().optional(), // Auto-increment primary key
+  accountHeadId: z.number().int(), // Foreign key, required
+  amount: z.number().min(0, 'Amount must be positive'),
+  expenseDate: z.date(),
+  remarks: z.string().optional().nullable(),
+  paymentType: z.enum(['bank', 'cash', 'mfs']),
+  bankAccountId: z.number().int().optional().nullable(), // Foreign key, can be null
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(), // Auto-handled by DB
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+})
+export const createExpenseSchema = expenseSchema.omit({ expenseId: true })
+export type GetExpenseType = z.infer<typeof expenseSchema> & {
+  accountHeadName: string
+  bankName: string | null
+  branch: string | null
+  accountNumber: string | null
+}
+export type CreateExpenseType = z.infer<typeof createExpenseSchema>
 
 
 
