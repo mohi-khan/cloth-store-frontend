@@ -164,7 +164,7 @@ export type GetCustomerType = z.infer<typeof customerSchema>
 
 // salesMaster schema
 export const salesMasterSchema = z.object({
-  salesMasterId: z.number().int().optional(),
+  saleMasterId: z.number().int().optional(),
   paymentType: z.enum(['cash', 'credit', 'bank', 'mfs']),
   bankAccountId: z.number().int().nullable().optional(),
   customerId: z.number().int(),
@@ -211,7 +211,7 @@ export const salesSchema = z.object({
 
 // Create salesMasterSchema
 const salesMasterCreateSchema = salesMasterSchema.omit({
-  salesMasterId: true,
+  saleMasterId: true,
   createdAt: true,
   updatedAt: true,
   updatedBy: true,

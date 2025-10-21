@@ -16,10 +16,6 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import {
-  useGetCurrentMonthClaimsCount,
-  useGetCurrentMonthTotalClaimAmount,
-} from '@/hooks/use-api'
 
 const DashboardOverview = () => {
   useInitializeUser()
@@ -29,18 +25,13 @@ const DashboardOverview = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
 
-  const { data: currentMonthClaimsCount } = useGetCurrentMonthClaimsCount()
+  const { data: currentMonthClaimsCount } = []
   console.log(
     '🚀 ~ DashboardOverview ~ currentMonthClaimsCount:',
     currentMonthClaimsCount
   )
 
-  const { data: currentMonthTotalClaimAmount } =
-    useGetCurrentMonthTotalClaimAmount()
-  console.log(
-    '🚀 ~ DashboardOverview ~ currentMonthTotalClaimAmount:',
-    currentMonthTotalClaimAmount
-  )
+  const { data: currentMonthTotalClaimAmount } = []
 
   useEffect(() => {
     const checkUserData = () => {

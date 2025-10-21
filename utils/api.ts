@@ -281,7 +281,7 @@ export async function editSale(
   token: string
 ) {
   return fetchApi<GetSalesType>({
-    url: `api/sales/edit/${id}`,
+    url: `api/sales/edit`,
     method: 'PATCH',
     body: data,
     headers: {
