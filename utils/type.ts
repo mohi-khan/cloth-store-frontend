@@ -252,6 +252,7 @@ export type CreateAccountHeadType = z.infer<typeof createAccountHeadSchema>
 export const expenseSchema = z.object({
   expenseId: z.number().int().optional(), // Auto-increment primary key
   accountHeadId: z.number().int(), // Foreign key, required
+  vendorId: z.number().int(), // Foreign key, required
   amount: z.number().min(0, 'Amount must be positive'),
   expenseDate: z.date(),
   remarks: z.string().optional().nullable(),
@@ -265,6 +266,7 @@ export const expenseSchema = z.object({
 export const createExpenseSchema = expenseSchema.omit({ expenseId: true })
 export type GetExpenseType = z.infer<typeof expenseSchema> & {
   accountHeadName: string
+  vendorName: string
   bankName: string | null
   branch: string | null
   accountNumber: string | null
