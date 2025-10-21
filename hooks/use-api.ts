@@ -2,6 +2,7 @@ import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  createAccountHead,
   createBankAccount,
   createCustomer,
   createItem,
@@ -14,6 +15,7 @@ import {
   editSale,
   editSorting,
   editVendor,
+  getAllAccountHeads,
   getAllBankAccounts,
   getAllCustomers,
   getAllItems,
@@ -23,6 +25,7 @@ import {
   getAllVendors,
 } from '@/utils/api'
 import type {
+  CreateAccountHeadType,
   CreateBankAccountType,
   CreateCustomerType,
   CreateItemType,
@@ -546,6 +549,54 @@ export const useEditSale = ({
     },
     onError: (error) => {
       console.error('Error editing sale:', error)
+    },
+  })
+
+  return mutation
+}
+
+export const useGeAccountHeads = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['accountHeads'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllAccountHeads(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+//account-head
+export const useAddAccountHead = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateAccountHeadType) => {
+      return createAccountHead(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('account head added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['accountHeads'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding item:', error)
     },
   })
 

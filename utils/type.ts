@@ -234,7 +234,17 @@ export const salesCreateSchema = z.object({
 export type CreateSalesType = z.infer<typeof salesCreateSchema>
 export type GetSalesType = z.infer<typeof salesSchema>
 
-
+export const accountHeadSchema = z.object({
+  accountHeadId: z.number().int().optional(),
+  name: z.string().min(1, 'Account Head name is required').max(100),
+  createdBy: z.number().int(),
+  createdAt: z.date().optional(), // Automatically handled by DB
+  updatedBy: z.number().int().optional().nullable(),
+  updatedAt: z.date().optional().nullable(),
+})
+export const createAccountHeadSchema = accountHeadSchema.omit({ accountHeadId: true })
+export type GetAccountHeadType = z.infer<typeof accountHeadSchema>
+export type CreateAccountHeadType = z.infer<typeof createAccountHeadSchema>
 
 
 

@@ -17,6 +17,8 @@ import {
   CreateCustomerType,
   GetSalesType,
   CreateSalesType,
+  GetAccountHeadType,
+  CreateAccountHeadType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -286,6 +288,32 @@ export async function editSale(
     body: data,
     headers: {
       Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllAccountHeads(token: string) {
+  return fetchApi<GetAccountHeadType[]>({
+    url: 'api/account-head/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createAccountHead(
+  data: CreateAccountHeadType,
+  token: string
+) {
+  return fetchApi<CreateAccountHeadType>({
+    url: 'api/account-head/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
       'Content-Type': 'application/json',
     },
   })
