@@ -71,10 +71,12 @@ const Sales = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   const [isPopupOpen, setIsPopupOpen] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
 
-  const [formData, setFormData] = useState<CreateSalesType>({
+  const [formData, setFormData] = useState<
+    CreateSalesType & {
+      salesMaster: CreateSalesType['salesMaster'] & { saleMasterId?: number }
+    }
+  >({
     salesMaster: {
       customerId: 0,
       paymentType: 'cash',
@@ -85,6 +87,7 @@ const Sales = () => {
       notes: '',
       discountAmount: 0,
       createdBy: userData?.userId || 0,
+      saleMasterId: undefined,
     },
     saleDetails: [
       {
@@ -97,7 +100,9 @@ const Sales = () => {
     ],
   })
 
-  const [saleDetails, setSaleDetails] = useState<GetSaleDetailsType[]>(
+  const [saleDetails, setSaleDetails] = useState<
+    (GetSaleDetailsType & { saleDetailsId?: number })[]
+  >(
     items?.data?.map((item) => ({
       itemId: item.itemId || 0,
       itemName: item.itemName || '',
@@ -105,7 +110,12 @@ const Sales = () => {
       unitPrice: 0,
       amount: 0,
       createdBy: userData?.userId || 0,
+      saleDetailsId: undefined,
     })) || []
+  )
+
+  const [saleDetailsIds, setSaleDetailsIds] = useState<(number | undefined)[]>(
+    []
   )
 
   const handleInputChange = (
@@ -196,6 +206,7 @@ const Sales = () => {
         notes: '',
         discountAmount: 0,
         createdBy: userData?.userId || 0,
+        saleMasterId: undefined,
       },
       saleDetails: [
         {
@@ -216,12 +227,13 @@ const Sales = () => {
         unitPrice: 0,
         amount: 0,
         createdBy: userData?.userId || 0,
+        saleDetailsId: undefined,
       })) || []
     )
 
+    setSaleDetailsIds([])
+
     setIsPopupOpen(false)
-    setIsEditMode(false)
-    setEditingId(null)
     setError(null)
   }, [userData?.userId, items?.data])
 
@@ -230,6 +242,7 @@ const Sales = () => {
   }, [resetForm])
 
   const mutation = useAddSale({ onClose: closePopup, reset: resetForm })
+
   const editMutation = useEditSale({
     onClose: closePopup,
     reset: resetForm,
@@ -361,8 +374,7 @@ const Sales = () => {
       )
       const totalAmount = validSaleDetails.reduce((sum, d) => sum + d.amount, 0)
 
-      const updatedFormData: CreateSalesType = {
-        ...formData,
+      const updatedFormData: any = {
         salesMaster: {
           ...formData.salesMaster,
           totalQuantity,
@@ -373,16 +385,26 @@ const Sales = () => {
           quantity: detail.quantity,
           unitPrice: detail.unitPrice,
           amount: detail.amount,
+          saleMasterId: formData.salesMaster.saleMasterId,
           createdBy: userData?.userId || 0,
+          ...(detail.saleDetailsId && { saleDetailsId: detail.saleDetailsId }),
         })),
       }
 
-      if (isEditMode && editingId) {
+      if (
+        formData.salesMaster.saleMasterId &&
+        formData.salesMaster.saleMasterId > 0
+      ) {
+        console.log(
+          '🚀 ~ handleSubmit ~ EDIT MODE:',
+          formData.salesMaster.saleMasterId
+        )
         editMutation.mutate({
-          id: editingId,
-          data: updatedFormData as any,
+          id: formData.salesMaster.saleMasterId,
+          data: updatedFormData,
         })
       } else {
+        console.log('🚀 ~ handleSubmit ~ CREATE MODE')
         mutation.mutate(updatedFormData)
       }
     } catch (err) {
@@ -391,10 +413,7 @@ const Sales = () => {
     }
   }
 
-  const handleEdit = (sale: GetSalesType) => {
-    setIsEditMode(true)
-    setEditingId(sale.salesMaster.salesMasterId ?? null)
-
+  const loadSaleForEditing = (sale: GetSalesType) => {
     setFormData({
       salesMaster: {
         customerId: sale.salesMaster.customerId ?? 0,
@@ -410,6 +429,7 @@ const Sales = () => {
         notes: sale.salesMaster.notes ?? '',
         discountAmount: sale.salesMaster.discountAmount ?? 0,
         createdBy: userData?.userId || 0,
+        saleMasterId: (sale.salesMaster as any).saleMasterId,
       },
       saleDetails:
         sale.saleDetails && sale.saleDetails.length > 0
@@ -444,6 +464,7 @@ const Sales = () => {
             unitPrice: existingDetail?.unitPrice || 0,
             amount: existingDetail?.amount || 0,
             createdBy: userData?.userId || 0,
+            saleDetailsId: (existingDetail as any)?.saleDetailsId,
           }
         }) || []
       )
@@ -480,7 +501,7 @@ const Sales = () => {
           <Button
             className="bg-amber-400 hover:bg-amber-500 text-black"
             onClick={() => {
-              setIsEditMode(false)
+              resetForm()
               setIsPopupOpen(true)
             }}
           >
@@ -561,10 +582,7 @@ const Sales = () => {
             ) : (
               paginatedSales.map((sale) => (
                 <TableRow
-                  key={
-                    sale.salesMaster?.salesMasterId ??
-                    `${sale.salesMaster?.customerId}-${String(sale.salesMaster?.saleDate)}`
-                  }
+                  key={sale.salesMaster?.saleMasterId || Math.random()}
                 >
                   <TableCell>
                     {(sale.salesMaster as any)?.customerName ?? '-'}
@@ -596,7 +614,7 @@ const Sales = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleEdit(sale)}
+                        onClick={() => loadSaleForEditing(sale)}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -675,7 +693,7 @@ const Sales = () => {
       <Popup
         isOpen={isPopupOpen}
         onClose={resetForm}
-        title={isEditMode ? 'Edit Sale' : 'Add Sale'}
+        title={formData.salesMaster.saleMasterId ? 'Edit Sale' : 'Add Sale'}
         size="sm:max-w-4xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -834,8 +852,8 @@ const Sales = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {saleDetails.map((detail) => (
-                    <TableRow key={detail.itemId}>
+                  {saleDetails.map((detail, index) => (
+                    <TableRow key={index}>
                       <TableCell className="font-medium">
                         {detail.itemName}
                       </TableCell>
@@ -901,7 +919,7 @@ const Sales = () => {
             >
               {mutation.isPending || editMutation.isPending
                 ? 'Saving...'
-                : isEditMode
+                : formData.salesMaster.saleMasterId
                   ? 'Update'
                   : 'Save'}
             </Button>

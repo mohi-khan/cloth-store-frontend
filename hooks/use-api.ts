@@ -2,8 +2,10 @@ import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  createAccountHead,
   createBankAccount,
   createCustomer,
+  createExpense,
   createItem,
   createPurchase,
   createSale,
@@ -14,8 +16,10 @@ import {
   editSale,
   editSorting,
   editVendor,
+  getAllAccountHeads,
   getAllBankAccounts,
   getAllCustomers,
+  getAllExpenses,
   getAllItems,
   getAllPurchases,
   getAllSales,
@@ -23,8 +27,10 @@ import {
   getAllVendors,
 } from '@/utils/api'
 import type {
+  CreateAccountHeadType,
   CreateBankAccountType,
   CreateCustomerType,
+  CreateExpenseType,
   CreateItemType,
   CreatePurchaseType,
   CreateSalesType,
@@ -546,6 +552,102 @@ export const useEditSale = ({
     },
     onError: (error) => {
       console.error('Error editing sale:', error)
+    },
+  })
+
+  return mutation
+}
+
+export const useGetAccountHeads = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['accountHeads'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllAccountHeads(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+//account-head
+export const useAddAccountHead = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateAccountHeadType) => {
+      return createAccountHead(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('account head added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['accountHeads'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding item:', error)
+    },
+  })
+
+  return mutation
+}
+
+export const useGetExpenses = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['expenses'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllExpenses(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+//account-head
+export const useAddExpense = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateExpenseType) => {
+      return createExpense(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('expense added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding item:', error)
     },
   })
 

@@ -54,6 +54,10 @@ export function DashboardSidebar() {
           title: 'Customers',
           href: '/dashboard/setup/customers',
         },
+         {
+          title: 'Account Heads',
+          href: '/dashboard/setup/account-heads',
+        },
         {
           title: 'Purchases',
           href: '/dashboard/setup/purchases',
@@ -65,6 +69,10 @@ export function DashboardSidebar() {
         {
           title: 'Sorting',
           href: '/dashboard/setup/sorting',
+        },
+        {
+          title: 'Expenses',
+          href: '/dashboard/setup/expenses',
         },
       ],
     },

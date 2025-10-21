@@ -17,6 +17,10 @@ import {
   CreateCustomerType,
   GetSalesType,
   CreateSalesType,
+  GetAccountHeadType,
+  CreateAccountHeadType,
+  GetExpenseType,
+  CreateExpenseType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -281,11 +285,63 @@ export async function editSale(
   token: string
 ) {
   return fetchApi<GetSalesType>({
-    url: `api/sales/edit/${id}`,
+    url: `api/sales/edit`,
     method: 'PATCH',
     body: data,
     headers: {
       Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllAccountHeads(token: string) {
+  return fetchApi<GetAccountHeadType[]>({
+    url: 'api/account-head/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createAccountHead(
+  data: CreateAccountHeadType,
+  token: string
+) {
+  return fetchApi<CreateAccountHeadType>({
+    url: 'api/account-head/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllExpenses(token: string) {
+  return fetchApi<GetExpenseType[]>({
+    url: 'api/expense/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createExpense(
+  data: CreateExpenseType,
+  token: string
+) {
+  return fetchApi<CreateExpenseType>({
+    url: 'api/expense/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
       'Content-Type': 'application/json',
     },
   })
