@@ -45,6 +45,7 @@ export const itemSchema = z.object({
   itemId: z.number().optional(),
   itemName: z.string().min(1, 'Item name is required'),
   sellPriece: z.number().positive('Sell price must be a positive number'),
+  isBulk: z.boolean().optional().default(false),
   createdBy: z.number(),
   createdAt: z.coerce.date().optional().nullable(),
   updatedBy: z.number().optional(),
