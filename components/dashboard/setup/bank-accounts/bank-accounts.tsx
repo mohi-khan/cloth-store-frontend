@@ -94,6 +94,8 @@ const BankAccounts = () => {
       return (
         account.bankName?.toLowerCase().includes(searchLower) ||
         account.accountNumber?.toLowerCase().includes(searchLower) ||
+        account.accountName?.toLowerCase().includes(searchLower) ||
+        account.balance?.toString().toLowerCase().includes(searchLower) ||
         account.branch?.toLowerCase().includes(searchLower)
       )
     })

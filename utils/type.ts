@@ -155,6 +155,7 @@ export const customerSchema = z.object({
     .optional()
     .nullable(),
   address: z.string().max(255).optional().nullable(),
+  balance: z.number().min(0, 'Balance must be at least 0'),
   createdBy: z.number().int(),
   createdAt: z.date().optional(), // Automatically handled by DB
   updatedBy: z.number().int().optional().nullable(),
