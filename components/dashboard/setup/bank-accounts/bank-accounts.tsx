@@ -73,6 +73,8 @@ const BankAccounts = () => {
     bankName: '',
     accountNumber: '',
     branch: '',
+    accountName: '',
+    balance: 0,
     createdBy: userData?.userId || 0,
   })
 
@@ -92,6 +94,8 @@ const BankAccounts = () => {
       return (
         account.bankName?.toLowerCase().includes(searchLower) ||
         account.accountNumber?.toLowerCase().includes(searchLower) ||
+        account.accountName?.toLowerCase().includes(searchLower) ||
+        account.balance?.toString().toLowerCase().includes(searchLower) ||
         account.branch?.toLowerCase().includes(searchLower)
       )
     })
@@ -140,6 +144,8 @@ const BankAccounts = () => {
       bankName: account.bankName,
       accountNumber: account.accountNumber,
       branch: account.branch || '',
+      accountName: account.accountName || '',
+      balance: account.balance || 0,
       createdBy: userData?.userId || 0,
       updatedBy: userData?.userId || 0,
     })
@@ -158,6 +164,8 @@ const BankAccounts = () => {
       bankName: '',
       accountNumber: '',
       branch: '',
+      accountName: '',
+      balance: 0,
       createdBy: userData?.userId || 0,
     })
     setIsPopupOpen(false)
@@ -203,11 +211,14 @@ const BankAccounts = () => {
               bankName: formData.bankName,
               accountNumber: formData.accountNumber,
               branch: formData.branch || null,
+              accountName: formData.accountName,
+              balance: Number(formData.balance),
             },
           })
         } else {
           addMutation.mutate({
             ...formData,
+            balance: Number(formData.balance),
             createdBy: userData?.userId || 0,
           })
         }
@@ -276,10 +287,22 @@ const BankAccounts = () => {
                 Account Number <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
+                onClick={() => handleSort('accountNumber')}
+                className="cursor-pointer"
+              >
+                Account Name <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
                 onClick={() => handleSort('branch')}
                 className="cursor-pointer"
               >
                 Branch <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('branch')}
+                className="cursor-pointer"
+              >
+                Balance <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
                 onClick={() => handleSort('createdAt')}
@@ -316,7 +339,9 @@ const BankAccounts = () => {
                     {account.bankName}
                   </TableCell>
                   <TableCell>{account.accountNumber}</TableCell>
+                  <TableCell>{account.accountName}</TableCell>
                   <TableCell>{account.branch}</TableCell>
+                  <TableCell>{account.balance}</TableCell>
                   <TableCell>{formatDate(account.createdAt)}</TableCell>
                   <TableCell>
                     <Button
@@ -431,6 +456,19 @@ const BankAccounts = () => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="accountName">Account Name*</Label>
+              <Input
+                id="accountName"
+                name="accountName"
+                value={formData.accountName}
+                onChange={handleInputChange}
+                placeholder="Enter account name"
+                required
+                maxLength={100}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="branch">Branch</Label>
               <Input
                 id="branch"
@@ -439,6 +477,20 @@ const BankAccounts = () => {
                 onChange={handleInputChange}
                 placeholder="Enter branch name"
                 maxLength={100}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="balance">Balance*</Label>
+              <Input
+                id="balance"
+                name="balance"
+                type='number'
+                value={formData.balance}
+                onChange={handleInputChange}
+                placeholder="Enter balance"
+                required
+                maxLength={50}
               />
             </div>
           </div>

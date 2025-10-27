@@ -1,11 +1,18 @@
-"use client"
+'use client'
 
-import type React from "react"
-import { useCallback, useEffect, useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import type React from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Pagination,
   PaginationContent,
@@ -13,15 +20,19 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
-import { ArrowUpDown, Search, Users } from "lucide-react"
-import { Popup } from "@/utils/popup"
-import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
-import { useAtom } from "jotai"
-import { useRouter } from "next/navigation"
-import { useGetCustomers, useAddCustomer, useEditCustomer } from "@/hooks/use-api"
-import formatDate from "@/utils/formatDate"
-import type { CreateCustomerType, GetCustomerType } from "@/utils/type"
+} from '@/components/ui/pagination'
+import { ArrowUpDown, Search, Users } from 'lucide-react'
+import { Popup } from '@/utils/popup'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
+import {
+  useGetCustomers,
+  useAddCustomer,
+  useEditCustomer,
+} from '@/hooks/use-api'
+import formatDate from '@/utils/formatDate'
+import type { CreateCustomerType, GetCustomerType } from '@/utils/type'
 
 const Customers = () => {
   useInitializeUser()
@@ -34,17 +45,17 @@ const Customers = () => {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
-  const [sortColumn, setSortColumn] = useState<keyof GetCustomerType>("name")
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
-  const [searchTerm, setSearchTerm] = useState("")
+  const [sortColumn, setSortColumn] = useState<keyof GetCustomerType>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     const checkUserData = () => {
-      const storedUserData = localStorage.getItem("currentUser")
-      const storedToken = localStorage.getItem("authToken")
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
       if (!storedUserData || !storedToken) {
-        console.log("No user data or token found in localStorage")
-        router.push("/")
+        console.log('No user data or token found in localStorage')
+        router.push('/')
         return
       }
     }
@@ -53,23 +64,25 @@ const Customers = () => {
 
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
-  const [editingCustomer, setEditingCustomer] = useState<GetCustomerType | null>(null)
+  const [editingCustomer, setEditingCustomer] =
+    useState<GetCustomerType | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<CreateCustomerType>({
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    balance: 0,
     createdBy: userData?.userId || 0,
   })
 
   const handleSort = (column: keyof GetCustomerType) => {
     if (column === sortColumn) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
       setSortColumn(column)
-      setSortDirection("asc")
+      setSortDirection('asc')
     }
   }
 
@@ -81,6 +94,7 @@ const Customers = () => {
         customer.name?.toLowerCase().includes(searchLower) ||
         customer.phone?.toLowerCase().includes(searchLower) ||
         customer.email?.toLowerCase().includes(searchLower) ||
+        customer.balance?.toLowerCase().includes(searchLower) ||
         customer.address?.toLowerCase().includes(searchLower)
       )
     })
@@ -88,19 +102,21 @@ const Customers = () => {
 
   const sortedCustomers = useMemo(() => {
     return [...filteredCustomers].sort((a, b) => {
-      const aValue = a[sortColumn] ?? ""
-      const bValue = b[sortColumn] ?? ""
+      const aValue = a[sortColumn] ?? ''
+      const bValue = b[sortColumn] ?? ''
 
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue
       }
 
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue)
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue)
       }
 
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
       return 0
     })
   }, [filteredCustomers, sortColumn, sortDirection])
@@ -125,9 +141,10 @@ const Customers = () => {
     setEditingCustomer(customer)
     setFormData({
       name: customer.name,
-      phone: customer.phone || "",
-      email: customer.email || "",
-      address: customer.address || "",
+      phone: customer.phone || '',
+      email: customer.email || '',
+      address: customer.address || '',
+      balance: customer.balance || 0,
       createdBy: userData?.userId || 0,
       updatedBy: userData?.userId || 0,
     })
@@ -143,10 +160,11 @@ const Customers = () => {
 
   const resetForm = useCallback(() => {
     setFormData({
-      name: "",
-      phone: "",
-      email: "",
-      address: "",
+      name: '',
+      phone: '',
+      email: '',
+      address: '',
+      balance: 0,
       createdBy: userData?.userId || 0,
     })
     setIsPopupOpen(false)
@@ -176,13 +194,18 @@ const Customers = () => {
 
       try {
         if (isEditMode && editingCustomer) {
-          if (editingCustomer?.customerId === undefined || editingCustomer?.createdBy === undefined) return
+          if (
+            editingCustomer?.customerId === undefined ||
+            editingCustomer?.createdBy === undefined
+          )
+            return
 
           editMutation.mutate({
             id: editingCustomer.customerId,
             data: {
               ...formData,
               customerId: editingCustomer.customerId,
+              balance: Number(formData.balance),
               updatedBy: userData?.userId || 0,
               createdBy: editingCustomer.createdBy || 0,
               name: formData.name,
@@ -194,16 +217,28 @@ const Customers = () => {
         } else {
           addMutation.mutate({
             ...formData,
+            balance: Number(formData.balance),
             createdBy: userData?.userId || 0,
           })
         }
         resetForm()
       } catch (error) {
-        setError(`Failed to ${isEditMode ? "update" : "create"} customer`)
-        console.error(`Error ${isEditMode ? "updating" : "creating"} customer:`, error)
+        setError(`Failed to ${isEditMode ? 'update' : 'create'} customer`)
+        console.error(
+          `Error ${isEditMode ? 'updating' : 'creating'} customer:`,
+          error
+        )
       }
     },
-    [formData, userData, isEditMode, editingCustomer, addMutation, editMutation, resetForm],
+    [
+      formData,
+      userData,
+      isEditMode,
+      editingCustomer,
+      addMutation,
+      editMutation,
+      resetForm,
+    ]
   )
 
   return (
@@ -225,7 +260,10 @@ const Customers = () => {
               className="pl-10 w-64"
             />
           </div>
-          <Button className="bg-yellow-400 hover:bg-yellow-500 text-black" onClick={handleAdd}>
+          <Button
+            className="bg-yellow-400 hover:bg-yellow-500 text-black"
+            onClick={handleAdd}
+          >
             Add
           </Button>
         </div>
@@ -235,19 +273,40 @@ const Customers = () => {
         <Table>
           <TableHeader className="bg-amber-100">
             <TableRow>
-              <TableHead onClick={() => handleSort("name")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('name')}
+                className="cursor-pointer"
+              >
                 Customer Name <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead onClick={() => handleSort("phone")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('phone')}
+                className="cursor-pointer"
+              >
                 Phone <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead onClick={() => handleSort("email")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('email')}
+                className="cursor-pointer"
+              >
                 Email <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead onClick={() => handleSort("address")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('address')}
+                className="cursor-pointer"
+              >
                 Address <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead onClick={() => handleSort("createdAt")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('address')}
+                className="cursor-pointer"
+              >
+                Balance <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('createdAt')}
+                className="cursor-pointer"
+              >
                 Created At <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead>Actions</TableHead>
@@ -279,9 +338,14 @@ const Customers = () => {
                   <TableCell>{customer.phone}</TableCell>
                   <TableCell>{customer.email}</TableCell>
                   <TableCell>{customer.address}</TableCell>
+                  <TableCell>{customer.balance}</TableCell>
                   <TableCell>{formatDate(customer.createdAt)}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(customer)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(customer)}
+                    >
                       Edit
                     </Button>
                   </TableCell>
@@ -298,21 +362,35 @@ const Customers = () => {
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  className={
+                    currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                  }
                 />
               </PaginationItem>
 
               {[...Array(totalPages)].map((_, index) => {
-                if (index === 0 || index === totalPages - 1 || (index >= currentPage - 2 && index <= currentPage + 2)) {
+                if (
+                  index === 0 ||
+                  index === totalPages - 1 ||
+                  (index >= currentPage - 2 && index <= currentPage + 2)
+                ) {
                   return (
                     <PaginationItem key={`page-${index}`}>
-                      <PaginationLink onClick={() => setCurrentPage(index + 1)} isActive={currentPage === index + 1}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(index + 1)}
+                        isActive={currentPage === index + 1}
+                      >
                         {index + 1}
                       </PaginationLink>
                     </PaginationItem>
                   )
-                } else if (index === currentPage - 3 || index === currentPage + 3) {
+                } else if (
+                  index === currentPage - 3 ||
+                  index === currentPage + 3
+                ) {
                   return (
                     <PaginationItem key={`ellipsis-${index}`}>
                       <PaginationLink>...</PaginationLink>
@@ -325,8 +403,14 @@ const Customers = () => {
 
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? 'pointer-events-none opacity-50'
+                      : ''
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
@@ -337,7 +421,7 @@ const Customers = () => {
       <Popup
         isOpen={isPopupOpen}
         onClose={resetForm}
-        title={isEditMode ? "Edit Customer" : "Add Customer"}
+        title={isEditMode ? 'Edit Customer' : 'Add Customer'}
         size="sm:max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -360,7 +444,7 @@ const Customers = () => {
               <Input
                 id="phone"
                 name="phone"
-                value={formData.phone || ""}
+                value={formData.phone || ''}
                 onChange={handleInputChange}
                 placeholder="Enter phone number"
                 maxLength={20}
@@ -373,7 +457,7 @@ const Customers = () => {
                 id="email"
                 name="email"
                 type="email"
-                value={formData.email || ""}
+                value={formData.email || ''}
                 onChange={handleInputChange}
                 placeholder="Enter email address"
                 maxLength={100}
@@ -385,10 +469,22 @@ const Customers = () => {
               <Input
                 id="address"
                 name="address"
-                value={formData.address || ""}
+                value={formData.address || ''}
                 onChange={handleInputChange}
                 placeholder="Enter address"
                 maxLength={255}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="balance">Balance</Label>
+              <Input
+                id="balance"
+                name="balance"
+                value={formData.balance || ''}
+                onChange={handleInputChange}
+                placeholder="Enter balance"
+                maxLength={20}
               />
             </div>
           </div>
@@ -399,7 +495,7 @@ const Customers = () => {
             <Button type="button" variant="outline" onClick={resetForm}>
               Cancel
             </Button>
-            <Button type="submit">{isEditMode ? "Update" : "Save"}</Button>
+            <Button type="submit">{isEditMode ? 'Update' : 'Save'}</Button>
           </div>
         </form>
       </Popup>

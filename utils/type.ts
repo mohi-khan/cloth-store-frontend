@@ -45,6 +45,7 @@ export const itemSchema = z.object({
   itemId: z.number().optional(),
   itemName: z.string().min(1, 'Item name is required'),
   sellPriece: z.number().positive('Sell price must be a positive number'),
+  isBulk: z.boolean().optional().default(false),
   createdBy: z.number(),
   createdAt: z.coerce.date().optional().nullable(),
   updatedBy: z.number().optional(),
@@ -59,6 +60,8 @@ export const bankAccountSchema = z.object({
   bankName: z.string().min(1, 'Bank name is required').max(100),
   accountNumber: z.string().min(1, 'Account number is required').max(50),
   branch: z.string().max(100).optional().nullable(),
+  accountName: z.string().min(1, 'Account name is required').max(100),
+  balance: z.number().min(0, 'Balance must be at least 0'),
   createdBy: z.number().int(),
   createdAt: z.date().optional(),
   updatedBy: z.number().int().optional().nullable(),
@@ -153,6 +156,7 @@ export const customerSchema = z.object({
     .optional()
     .nullable(),
   address: z.string().max(255).optional().nullable(),
+  balance: z.number().min(0, 'Balance must be at least 0'),
   createdBy: z.number().int(),
   createdAt: z.date().optional(), // Automatically handled by DB
   updatedBy: z.number().int().optional().nullable(),
@@ -252,7 +256,6 @@ export type CreateAccountHeadType = z.infer<typeof createAccountHeadSchema>
 export const expenseSchema = z.object({
   expenseId: z.number().int().optional(), // Auto-increment primary key
   accountHeadId: z.number().int(), // Foreign key, required
-  vendorId: z.number().int(), // Foreign key, required
   amount: z.number().min(0, 'Amount must be positive'),
   expenseDate: z.date(),
   remarks: z.string().optional().nullable(),
@@ -266,7 +269,6 @@ export const expenseSchema = z.object({
 export const createExpenseSchema = expenseSchema.omit({ expenseId: true })
 export type GetExpenseType = z.infer<typeof expenseSchema> & {
   accountHeadName: string
-  vendorName: string
   bankName: string | null
   branch: string | null
   accountNumber: string | null
