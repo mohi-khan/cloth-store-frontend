@@ -31,7 +31,11 @@ import {
 } from '@/components/ui/pagination'
 import { ArrowUpDown, Search, ShoppingCart } from 'lucide-react'
 import { Popup } from '@/utils/popup'
-import type { CreatePurchaseType, GetItemType, GetPurchaseType } from '@/utils/type'
+import type {
+  CreatePurchaseType,
+  GetItemType,
+  GetPurchaseType,
+} from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -48,12 +52,13 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 const Purchases = () => {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
-  console.log("🚀 ~ Purchases ~ userData:", userData?.userId)
+  console.log('🚀 ~ Purchases ~ userData:', userData?.userId)
   const [token] = useAtom(tokenAtom)
 
   const { data: purchases } = useGetPurchases()
   const { data: rawItems } = useGetItems()
-    const items = rawItems?.data?.filter((item: GetItemType) => item.isBulk === true) || []
+  const items =
+    rawItems?.data?.filter((item: GetItemType) => item.isBulk === true) || []
   const { data: vendors } = useGetVendors()
   const { data: bankAccounts } = useGetBankAccounts() // Dynamic bank accounts
   console.log('🚀 ~ Purchases ~ bankAccounts:', bankAccounts)
@@ -556,7 +561,10 @@ const Purchases = () => {
                       : null
                   }
                   onChange={(value) =>
-                    handleSelectChange('bankAccountId', value ? String(value.id) : '0')
+                    handleSelectChange(
+                      'bankAccountId',
+                      value ? String(value.id) : '0'
+                    )
                   }
                   placeholder="Select bank account"
                 />

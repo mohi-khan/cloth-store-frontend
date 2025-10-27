@@ -29,7 +29,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { ArrowUpDown, Search, ShoppingCart, Edit2 } from 'lucide-react'
+import {
+  ArrowUpDown,
+  Search,
+  ShoppingCart,
+  Edit2,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import { Popup } from '@/utils/popup'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -46,6 +53,7 @@ import {
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type {
   CreateSalesType,
+  GetItemType,
   GetSaleDetailsType,
   GetSalesType,
 } from '@/utils/type'
@@ -57,7 +65,9 @@ const Sales = () => {
 
   const { data: sales } = useGetSales()
   console.log('🚀 ~ Sales ~ sales:', sales)
-  const { data: items } = useGetItems()
+  const { data: rawItems } = useGetItems()
+  const items =
+    rawItems?.data?.filter((item: GetItemType) => item.isBulk === false) || []
   const { data: customers } = useGetCustomers()
   const { data: bankAccounts } = useGetBankAccounts()
 
@@ -79,7 +89,7 @@ const Sales = () => {
   >({
     salesMaster: {
       customerId: 0,
-      paymentType: 'cash',
+      paymentType: 'credit',
       bankAccountId: null,
       saleDate: new Date(),
       totalAmount: 0,
@@ -102,17 +112,17 @@ const Sales = () => {
 
   const [saleDetails, setSaleDetails] = useState<
     (GetSaleDetailsType & { saleDetailsId?: number })[]
-  >(
-    items?.data?.map((item) => ({
-      itemId: item.itemId || 0,
-      itemName: item.itemName || '',
+  >([
+    {
+      itemId: 0,
+      itemName: '',
       quantity: 0,
       unitPrice: 0,
       amount: 0,
       createdBy: userData?.userId || 0,
       saleDetailsId: undefined,
-    })) || []
-  )
+    },
+  ])
 
   const [saleDetailsIds, setSaleDetailsIds] = useState<(number | undefined)[]>(
     []
@@ -155,7 +165,7 @@ const Sales = () => {
         ...prev,
         salesMaster: {
           ...prev.salesMaster,
-          paymentType: value as 'cash' | 'credit' | 'bank' | 'mfs',
+          paymentType: value as 'credit',
           bankAccountId:
             value === 'bank' ? prev.salesMaster.bankAccountId : null,
         },
@@ -172,15 +182,15 @@ const Sales = () => {
   }
 
   const handleDetailChange = (
-    itemId: number,
+    index: number,
     field: keyof GetSaleDetailsType,
     value: string | number
   ) => {
     const numValue = typeof value === 'string' ? Number(value) : value
 
     setSaleDetails((prev) =>
-      prev.map((detail) => {
-        if (detail.itemId === itemId) {
+      prev.map((detail, i) => {
+        if (i === index) {
           const updatedDetail = { ...detail, [field]: numValue }
           // Auto-calculate amount
           if (field === 'quantity' || field === 'unitPrice') {
@@ -194,11 +204,46 @@ const Sales = () => {
     )
   }
 
+  const handleItemSelect = (index: number, itemId: number) => {
+    const selectedItem = items?.find((i) => i.itemId === itemId)
+    setSaleDetails((prev) =>
+      prev.map((detail, i) => {
+        if (i === index) {
+          return {
+            ...detail,
+            itemId,
+            itemName: selectedItem?.itemName || '',
+          }
+        }
+        return detail
+      })
+    )
+  }
+
+  const handleAddRow = () => {
+    setSaleDetails((prev) => [
+      ...prev,
+      {
+        itemId: 0,
+        itemName: '',
+        quantity: 0,
+        unitPrice: 0,
+        amount: 0,
+        createdBy: userData?.userId || 0,
+        saleDetailsId: undefined,
+      },
+    ])
+  }
+
+  const handleRemoveRow = (index: number) => {
+    setSaleDetails((prev) => prev.filter((_, i) => i !== index))
+  }
+
   const resetForm = useCallback(() => {
     setFormData({
       salesMaster: {
         customerId: 0,
-        paymentType: 'cash',
+        paymentType: 'credit',
         bankAccountId: null,
         saleDate: new Date(),
         totalAmount: 0,
@@ -219,23 +264,23 @@ const Sales = () => {
       ],
     })
 
-    setSaleDetails(
-      items?.data?.map((item) => ({
-        itemId: item.itemId || 0,
-        itemName: item.itemName || '',
+    setSaleDetails([
+      {
+        itemId: 0,
+        itemName: '',
         quantity: 0,
         unitPrice: 0,
         amount: 0,
         createdBy: userData?.userId || 0,
         saleDetailsId: undefined,
-      })) || []
-    )
+      },
+    ])
 
     setSaleDetailsIds([])
 
     setIsPopupOpen(false)
     setError(null)
-  }, [userData?.userId, items?.data])
+  }, [userData?.userId])
 
   const closePopup = useCallback(() => {
     resetForm()
@@ -348,7 +393,10 @@ const Sales = () => {
 
     const validSaleDetails = saleDetails.filter(
       (detail) =>
-        detail.quantity > 0 && detail.unitPrice > 0 && detail.amount > 0
+        detail.itemId > 0 &&
+        detail.quantity > 0 &&
+        detail.unitPrice > 0 &&
+        detail.amount > 0
     )
 
     if (validSaleDetails.length === 0) {
@@ -417,7 +465,7 @@ const Sales = () => {
     setFormData({
       salesMaster: {
         customerId: sale.salesMaster.customerId ?? 0,
-        paymentType: sale.salesMaster.paymentType ?? 'cash',
+        paymentType: sale.salesMaster.paymentType ?? 'credit',
         bankAccountId: sale.salesMaster.bankAccountId ?? null,
         saleDate: sale.salesMaster.saleDate
           ? sale.salesMaster.saleDate instanceof Date
@@ -453,21 +501,31 @@ const Sales = () => {
 
     if (sale.saleDetails && sale.saleDetails.length > 0) {
       setSaleDetails(
-        items?.data?.map((item) => {
-          const existingDetail = sale.saleDetails.find(
-            (d) => d.itemId === item.itemId
-          )
+        sale.saleDetails.map((detail) => {
+          const itemData = items?.find((i) => i.itemId === detail.itemId)
           return {
-            itemId: item.itemId || 0,
-            itemName: item.itemName || '',
-            quantity: existingDetail?.quantity || 0,
-            unitPrice: existingDetail?.unitPrice || 0,
-            amount: existingDetail?.amount || 0,
+            itemId: detail.itemId,
+            itemName: itemData?.itemName || '',
+            quantity: detail.quantity,
+            unitPrice: detail.unitPrice,
+            amount: detail.amount,
             createdBy: userData?.userId || 0,
-            saleDetailsId: (existingDetail as any)?.saleDetailsId,
+            saleDetailsId: (detail as any)?.saleDetailsId,
           }
-        }) || []
+        })
       )
+    } else {
+      setSaleDetails([
+        {
+          itemId: 0,
+          itemName: '',
+          quantity: 0,
+          unitPrice: 0,
+          amount: 0,
+          createdBy: userData?.userId || 0,
+          saleDetailsId: undefined,
+        },
+      ])
     }
 
     setIsPopupOpen(true)
@@ -581,9 +639,7 @@ const Sales = () => {
               </TableRow>
             ) : (
               paginatedSales.map((sale) => (
-                <TableRow
-                  key={sale.salesMaster?.saleMasterId || Math.random()}
-                >
+                <TableRow key={sale.salesMaster?.saleMasterId || Math.random()}>
                   <TableCell>
                     {(sale.salesMaster as any)?.customerName ?? '-'}
                   </TableCell>
@@ -694,7 +750,7 @@ const Sales = () => {
         isOpen={isPopupOpen}
         onClose={resetForm}
         title={formData.salesMaster.saleMasterId ? 'Edit Sale' : 'Add Sale'}
-        size="sm:max-w-4xl"
+        size="sm:max-w-5xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           {/* Master Section */}
@@ -748,28 +804,6 @@ const Sales = () => {
                 onChange={handleInputChange}
                 required
               />
-            </div>
-
-            {/* Payment Type */}
-            <div className="space-y-2">
-              <Label htmlFor="paymentType">Payment Type*</Label>
-              <Select
-                name="paymentType"
-                value={formData.salesMaster.paymentType}
-                onValueChange={(value) =>
-                  handleSelectChange('paymentType', value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="credit">Credit</SelectItem>
-                  <SelectItem value="bank">Bank</SelectItem>
-                  <SelectItem value="mfs">MFS</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Discount Amount */}
@@ -837,25 +871,46 @@ const Sales = () => {
 
           {/* Sale Details Section */}
           <div className="space-y-3 border-t pt-4">
-            <h3 className="font-semibold">
-              Sale Details - Fill in quantity and price for items
-            </h3>
+            <h3 className="font-semibold">Sale Details</h3>
 
-            <div className="rounded-md border overflow-x-auto">
+            <div className="rounded-md border">
               <Table>
                 <TableHeader className="bg-gray-50">
                   <TableRow>
-                    <TableHead>Item Name</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Unit Price</TableHead>
-                    <TableHead>Amount</TableHead>
+                    <TableHead className="w-1/3">Item</TableHead>
+                    <TableHead className="w-1/6">Quantity</TableHead>
+                    <TableHead className="w-1/6">Unit Price</TableHead>
+                    <TableHead className="w-1/6">Amount</TableHead>
+                    <TableHead className="w-1/12">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {saleDetails.map((detail, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">
-                        {detail.itemName}
+                      <TableCell>
+                        <CustomCombobox
+                          items={
+                            items?.map((i) => ({
+                              id: i?.itemId?.toString() || '0',
+                              name: i.itemName || 'Unnamed item',
+                            })) || []
+                          }
+                          value={
+                            detail.itemId > 0
+                              ? {
+                                  id: detail.itemId.toString(),
+                                  name: detail.itemName || '',
+                                }
+                              : null
+                          }
+                          onChange={(value) =>
+                            handleItemSelect(
+                              index,
+                              value ? Number(value.id) : 0
+                            )
+                          }
+                          placeholder="Select item"
+                        />
                       </TableCell>
                       <TableCell>
                         <Input
@@ -865,7 +920,7 @@ const Sales = () => {
                           value={detail.quantity || ''}
                           onChange={(e) =>
                             handleDetailChange(
-                              detail.itemId,
+                              index,
                               'quantity',
                               e.target.value
                             )
@@ -882,7 +937,7 @@ const Sales = () => {
                           value={detail.unitPrice || ''}
                           onChange={(e) =>
                             handleDetailChange(
-                              detail.itemId,
+                              index,
                               'unitPrice',
                               e.target.value
                             )
@@ -896,11 +951,33 @@ const Sales = () => {
                           {detail.amount.toFixed(2)}
                         </span>
                       </TableCell>
+                      <TableCell>
+                        {saleDetails.length > 1 && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemoveRow(index)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddRow}
+              className="w-full bg-transparent"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add More
+            </Button>
           </div>
 
           {error && (
