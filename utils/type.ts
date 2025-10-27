@@ -59,6 +59,8 @@ export const bankAccountSchema = z.object({
   bankName: z.string().min(1, 'Bank name is required').max(100),
   accountNumber: z.string().min(1, 'Account number is required').max(50),
   branch: z.string().max(100).optional().nullable(),
+  accountName: z.string().min(1, 'Account name is required').max(100),
+  balance: z.number().min(0, 'Balance must be at least 0'),
   createdBy: z.number().int(),
   createdAt: z.date().optional(),
   updatedBy: z.number().int().optional().nullable(),
