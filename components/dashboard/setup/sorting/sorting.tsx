@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/pagination'
 import { ArrowUpDown, Search, Package, Plus, Trash2 } from 'lucide-react'
 import { Popup } from '@/utils/popup'
-import type { GetSortingType, GetPurchaseType } from '@/utils/type'
+import type { GetSortingType, GetPurchaseType, GetItemType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import formatDate from '@/utils/formatDate'
@@ -56,9 +56,9 @@ const Sortings = () => {
 
   const { data: sortings, refetch: refetchSortings } = useGetSortings()
   const { data: purchases, refetch: refetchPurchases } = useGetPurchases()
-  const { data: items } = useGetItems()
-  const { data: vendors } = useGetVendors()
-  const { data: bankAccounts } = useGetBankAccounts()
+  const { data: rawItems } = useGetItems()
+  const items =
+    rawItems?.data?.filter((item: GetItemType) => item.isBulk === false) || []
 
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -405,10 +405,10 @@ const Sortings = () => {
     )
 
     // Validate total quantity matches purchase quantity
-    if (totalQuantity !== selectedPurchase.totalQuantity) {
+    if (totalQuantity > selectedPurchase.totalQuantity) {
       toast({
         title: 'Quantity Mismatch',
-        description: `Total quantity (${totalQuantity}) must match purchase quantity (${selectedPurchase.totalQuantity})`,
+        description: `Total quantity (${totalQuantity}) must be less than or equal to purchase quantity (${selectedPurchase.totalQuantity})`,
         variant: 'destructive',
       })
       return
@@ -480,10 +480,10 @@ const Sortings = () => {
     )
 
     // Validate total quantity matches purchase quantity
-    if (totalQuantity !== selectedPurchase.totalQuantity) {
+    if (totalQuantity > selectedPurchase.totalQuantity) {
       toast({
         title: 'Quantity Mismatch',
-        description: `Total quantity (${totalQuantity}) must match purchase quantity (${selectedPurchase.totalQuantity})`,
+        description: `Total quantity (${totalQuantity}) must be less than or equal to purchase quantity (${selectedPurchase.totalQuantity})`,
         variant: 'destructive',
       })
       return
@@ -671,12 +671,6 @@ const Sortings = () => {
                 Sorting Date <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
-                onClick={() => handleSort('bankName')}
-                className="cursor-pointer"
-              >
-                Bank Details <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-              </TableHead>
-              <TableHead
                 onClick={() => handleSort('notes')}
                 className="cursor-pointer"
               >
@@ -715,7 +709,7 @@ const Sortings = () => {
                       className="bg-amber-50 hover:bg-amber-50"
                     >
                       <TableCell
-                        colSpan={7}
+                        colSpan={6}
                         className="font-semibold text-amber-900"
                       >
                         Purchase #{purchaseId} Sortings
@@ -746,11 +740,6 @@ const Sortings = () => {
                           {sorting.paymentType}
                         </TableCell>
                         <TableCell>{formatDate(sorting.sortingDate)}</TableCell>
-                        <TableCell>
-                          {sorting.bankName
-                            ? `${sorting.bankName} - ${sorting.branch} - ${sorting.accountNumber}`
-                            : '-'}
-                        </TableCell>
                         <TableCell>{sorting.notes || '-'}</TableCell>
                       </TableRow>
                     ))}
@@ -838,7 +827,8 @@ const Sortings = () => {
               {selectedPurchase?.totalQuantity || 0}
             </p>
             <p className="text-sm text-amber-700 mt-1">
-              The sum of all item quantities must equal the purchase quantity.
+              The sum of all item quantities must be less or equal of the
+              purchase quantity.
             </p>
           </div>
 
@@ -858,7 +848,7 @@ const Sortings = () => {
                     <TableCell>
                       <CustomCombobox
                         items={
-                          items?.data?.map((i) => ({
+                          items?.map((i) => ({
                             id: i?.itemId?.toString() || '0',
                             name: i.itemName || 'Unnamed item',
                           })) || []
@@ -868,9 +858,8 @@ const Sortings = () => {
                             ? {
                                 id: item.itemId.toString(),
                                 name:
-                                  items?.data?.find(
-                                    (i) => i.itemId === item.itemId
-                                  )?.itemName || '',
+                                  items?.find((i) => i.itemId === item.itemId)
+                                    ?.itemName || '',
                               }
                             : null
                         }
@@ -1001,7 +990,7 @@ const Sortings = () => {
                     <TableCell>
                       <CustomCombobox
                         items={
-                          items?.data?.map((i) => ({
+                          items?.map((i) => ({
                             id: i?.itemId?.toString() || '0',
                             name: i.itemName || 'Unnamed item',
                           })) || []
@@ -1011,9 +1000,8 @@ const Sortings = () => {
                             ? {
                                 id: item.itemId.toString(),
                                 name:
-                                  items?.data?.find(
-                                    (i) => i.itemId === item.itemId
-                                  )?.itemName || '',
+                                  items?.find((i) => i.itemId === item.itemId)
+                                    ?.itemName || '',
                               }
                             : null
                         }

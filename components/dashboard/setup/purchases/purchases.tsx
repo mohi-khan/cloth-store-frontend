@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/pagination'
 import { ArrowUpDown, Search, ShoppingCart } from 'lucide-react'
 import { Popup } from '@/utils/popup'
-import type { CreatePurchaseType, GetPurchaseType } from '@/utils/type'
+import type { CreatePurchaseType, GetItemType, GetPurchaseType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -52,7 +52,8 @@ const Purchases = () => {
   const [token] = useAtom(tokenAtom)
 
   const { data: purchases } = useGetPurchases()
-  const { data: items } = useGetItems()
+  const { data: rawItems } = useGetItems()
+    const items = rawItems?.data?.filter((item: GetItemType) => item.isBulk === true) || []
   const { data: vendors } = useGetVendors()
   const { data: bankAccounts } = useGetBankAccounts() // Dynamic bank accounts
   console.log('🚀 ~ Purchases ~ bankAccounts:', bankAccounts)
@@ -418,7 +419,7 @@ const Purchases = () => {
               <Label htmlFor="itemId">Item*</Label>
               <CustomCombobox
                 items={
-                  items?.data?.map((item) => ({
+                  items?.map((item) => ({
                     id: item?.itemId?.toString() || '0',
                     name: item.itemName || 'Unnamed item',
                   })) || []
@@ -428,7 +429,7 @@ const Purchases = () => {
                     ? {
                         id: formData.itemId.toString(),
                         name:
-                          items?.data?.find((i) => i.itemId === formData.itemId)
+                          items?.find((i) => i.itemId === formData.itemId)
                             ?.itemName || '',
                       }
                     : null
