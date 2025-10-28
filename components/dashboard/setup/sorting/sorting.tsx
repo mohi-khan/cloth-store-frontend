@@ -172,8 +172,15 @@ const Sortings = () => {
       purchaseId: number
       sortings: GetSortingType[]
     }> = []
-    groupedSortings.forEach((sortings, purchaseId) => {
-      result.push({ type: 'group', purchaseId, sortings })
+    const sortedPurchaseIds = Array.from(groupedSortings.keys()).sort(
+      (a, b) => b - a
+    )
+    sortedPurchaseIds.forEach((purchaseId) => {
+      result.push({
+        type: 'group',
+        purchaseId,
+        sortings: groupedSortings.get(purchaseId) || [],
+      })
     })
     return result
   }, [groupedSortings])
@@ -184,6 +191,22 @@ const Sortings = () => {
   }, [flattenedGroupedSortings, currentPage, itemsPerPage])
 
   const totalPages = Math.ceil(flattenedGroupedSortings.length / itemsPerPage)
+
+  const isSortingComplete = (
+    sortings: GetSortingType[],
+    purchaseId: number
+  ): boolean => {
+    const purchase = purchases?.data?.find(
+      (p: GetPurchaseType) => p.purchaseId === purchaseId
+    )
+    if (!purchase) return false
+
+    const totalQuantity = sortings.reduce(
+      (sum, sorting) => sum + sorting.totalQuantity,
+      0
+    )
+    return totalQuantity === purchase.totalQuantity
+  }
 
   const sortedPurchases = useMemo(() => {
     if (!purchases?.data) return []
@@ -214,17 +237,9 @@ const Sortings = () => {
       })
   }, [purchases?.data, purchaseSortColumn, purchaseSortDirection])
 
-  // Handle opening sort popup
   const handleOpenSortPopup = (purchase: GetPurchaseType) => {
+    console.log('🚀 ~ handleOpenSortPopup ~ purchase:', purchase)
     setSelectedPurchase(purchase)
-    setSortingItems([
-      {
-        itemId: 0,
-        quantity: 0,
-        notes: '',
-        createdBy: userData?.userId || 0,
-      },
-    ])
     setIsSortPopupOpen(true)
   }
 
@@ -259,44 +274,6 @@ const Sortings = () => {
     setEditSortingItems(editItems)
     setIsEditPopupOpen(true)
   }
-
-  // Add more sorting items
-  const handleAddSortingItem = () => {
-    setSortingItems([
-      ...sortingItems,
-      {
-        itemId: 0,
-        quantity: 0,
-        notes: '',
-        createdBy: userData?.userId || 0,
-      },
-    ])
-  }
-
-  const handleAddEditSortingItem = () => {
-    setEditSortingItems([
-      ...editSortingItems,
-      {
-        itemId: 0,
-        quantity: 0,
-        notes: '',
-        createdBy: userData?.userId || 0,
-        purchaseId: selectedPurchaseId || undefined,
-      },
-    ])
-  }
-
-  // Remove sorting item
-  const handleRemoveSortingItem = (index: number) => {
-    if (sortingItems.length > 1) {
-      setSortingItems(sortingItems.filter((_, i) => i !== index))
-    }
-  }
-
-  const deleteMutation = useDeleteSorting({
-    onClose: () => {},
-    reset: () => {},
-  })
 
   const handleRemoveEditSortingItem = async (index: number) => {
     if (editSortingItems.length > 1) {
@@ -400,6 +377,42 @@ const Sortings = () => {
     onClose: closeEditPopup,
     reset: resetEditForm,
   })
+
+  const deleteMutation = useDeleteSorting({
+    onClose: () => {},
+    reset: () => {},
+  })
+
+  const handleAddSortingItem = () => {
+    setSortingItems([
+      ...sortingItems,
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        createdBy: userData?.userId || 0,
+      },
+    ])
+  }
+
+  const handleAddEditSortingItem = () => {
+    setEditSortingItems([
+      ...editSortingItems,
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        createdBy: userData?.userId || 0,
+        purchaseId: selectedPurchaseId || undefined,
+      },
+    ])
+  }
+
+  const handleRemoveSortingItem = (index: number) => {
+    if (sortingItems.length > 1) {
+      setSortingItems(sortingItems.filter((_, i) => i !== index))
+    }
+  }
 
   const handleSortSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -724,16 +737,24 @@ const Sortings = () => {
             ) : (
               paginatedSortings.map((group) => {
                 const { purchaseId, sortings } = group
+                const isComplete = isSortingComplete(sortings, purchaseId)
+                const headerBgClass = isComplete
+                  ? 'bg-green-100 hover:bg-green-100'
+                  : 'bg-amber-50 hover:bg-amber-50'
+                const headerTextClass = isComplete
+                  ? 'text-green-900'
+                  : 'text-amber-900'
+
                 return (
                   <React.Fragment key={purchaseId}>
                     {/* Header row for purchaseId */}
                     <TableRow
                       key={`header-${purchaseId}`}
-                      className="bg-amber-50 hover:bg-amber-50"
+                      className={headerBgClass}
                     >
                       <TableCell
                         colSpan={6}
-                        className="font-semibold text-amber-900"
+                        className={`font-semibold ${headerTextClass}`}
                       >
                         Purchase #{purchaseId} Sortings
                       </TableCell>
