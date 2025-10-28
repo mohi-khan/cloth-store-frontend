@@ -211,6 +211,21 @@ export async function editSorting(
   })
 }
 
+export async function deleteSorting(
+  id: number,
+  userId: number,
+  token: string
+) {
+  return fetchApi<number>({
+    url: `api/sorting/delete/${id}/${userId}`,
+    method: 'DELETE',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 export async function getAllCustomers(token: string) {
   return fetchApi<GetCustomerType[]>({
     url: 'api/customer/getAll',

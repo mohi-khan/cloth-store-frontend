@@ -29,11 +29,10 @@ import formatDate from '@/utils/formatDate'
 import {
   useGetPurchases,
   useGetItems,
-  useGetVendors,
-  useGetBankAccounts,
   useGetSortings,
   useAddSorting,
   useEditSorting,
+  useDeleteSorting,
 } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useToast } from '@/hooks/use-toast'
@@ -294,13 +293,38 @@ const Sortings = () => {
     }
   }
 
-  const handleRemoveEditSortingItem = (index: number) => {
+  const deleteMutation = useDeleteSorting({
+    onClose: () => {},
+    reset: () => {},
+  })
+
+  const handleRemoveEditSortingItem = async (index: number) => {
     if (editSortingItems.length > 1) {
+      const itemToDelete = editSortingItems[index]
+
+      // If the item has a sortingId, it exists in the database and needs to be deleted
+      if (itemToDelete.sortingId) {
+        try {
+          await deleteMutation.mutateAsync({
+            id: itemToDelete.sortingId,
+            userId: userData?.userId || 0,
+          })
+        } catch (err) {
+          console.error('Error deleting sorting:', err)
+          toast({
+            title: 'Error',
+            description: 'Failed to delete sorting item',
+            variant: 'destructive',
+          })
+          return
+        }
+      }
+
+      // Remove from local state
       setEditSortingItems(editSortingItems.filter((_, i) => i !== index))
     }
   }
 
-  // Update sorting item
   const handleUpdateSortingItem = (
     index: number,
     field: keyof SortingItem,
@@ -377,7 +401,6 @@ const Sortings = () => {
     reset: resetEditForm,
   })
 
-  // Handle sort submission
   const handleSortSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
