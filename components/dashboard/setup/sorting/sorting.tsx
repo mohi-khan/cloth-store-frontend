@@ -29,11 +29,10 @@ import formatDate from '@/utils/formatDate'
 import {
   useGetPurchases,
   useGetItems,
-  useGetVendors,
-  useGetBankAccounts,
   useGetSortings,
   useAddSorting,
   useEditSorting,
+  useDeleteSorting,
 } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useToast } from '@/hooks/use-toast'
@@ -173,8 +172,15 @@ const Sortings = () => {
       purchaseId: number
       sortings: GetSortingType[]
     }> = []
-    groupedSortings.forEach((sortings, purchaseId) => {
-      result.push({ type: 'group', purchaseId, sortings })
+    const sortedPurchaseIds = Array.from(groupedSortings.keys()).sort(
+      (a, b) => b - a
+    )
+    sortedPurchaseIds.forEach((purchaseId) => {
+      result.push({
+        type: 'group',
+        purchaseId,
+        sortings: groupedSortings.get(purchaseId) || [],
+      })
     })
     return result
   }, [groupedSortings])
@@ -185,6 +191,22 @@ const Sortings = () => {
   }, [flattenedGroupedSortings, currentPage, itemsPerPage])
 
   const totalPages = Math.ceil(flattenedGroupedSortings.length / itemsPerPage)
+
+  const isSortingComplete = (
+    sortings: GetSortingType[],
+    purchaseId: number
+  ): boolean => {
+    const purchase = purchases?.data?.find(
+      (p: GetPurchaseType) => p.purchaseId === purchaseId
+    )
+    if (!purchase) return false
+
+    const totalQuantity = sortings.reduce(
+      (sum, sorting) => sum + sorting.totalQuantity,
+      0
+    )
+    return totalQuantity === purchase.totalQuantity
+  }
 
   const sortedPurchases = useMemo(() => {
     if (!purchases?.data) return []
@@ -215,17 +237,9 @@ const Sortings = () => {
       })
   }, [purchases?.data, purchaseSortColumn, purchaseSortDirection])
 
-  // Handle opening sort popup
   const handleOpenSortPopup = (purchase: GetPurchaseType) => {
+    console.log('🚀 ~ handleOpenSortPopup ~ purchase:', purchase)
     setSelectedPurchase(purchase)
-    setSortingItems([
-      {
-        itemId: 0,
-        quantity: 0,
-        notes: '',
-        createdBy: userData?.userId || 0,
-      },
-    ])
     setIsSortPopupOpen(true)
   }
 
@@ -261,46 +275,33 @@ const Sortings = () => {
     setIsEditPopupOpen(true)
   }
 
-  // Add more sorting items
-  const handleAddSortingItem = () => {
-    setSortingItems([
-      ...sortingItems,
-      {
-        itemId: 0,
-        quantity: 0,
-        notes: '',
-        createdBy: userData?.userId || 0,
-      },
-    ])
-  }
-
-  const handleAddEditSortingItem = () => {
-    setEditSortingItems([
-      ...editSortingItems,
-      {
-        itemId: 0,
-        quantity: 0,
-        notes: '',
-        createdBy: userData?.userId || 0,
-        purchaseId: selectedPurchaseId || undefined,
-      },
-    ])
-  }
-
-  // Remove sorting item
-  const handleRemoveSortingItem = (index: number) => {
-    if (sortingItems.length > 1) {
-      setSortingItems(sortingItems.filter((_, i) => i !== index))
-    }
-  }
-
-  const handleRemoveEditSortingItem = (index: number) => {
+  const handleRemoveEditSortingItem = async (index: number) => {
     if (editSortingItems.length > 1) {
+      const itemToDelete = editSortingItems[index]
+
+      // If the item has a sortingId, it exists in the database and needs to be deleted
+      if (itemToDelete.sortingId) {
+        try {
+          await deleteMutation.mutateAsync({
+            id: itemToDelete.sortingId,
+            userId: userData?.userId || 0,
+          })
+        } catch (err) {
+          console.error('Error deleting sorting:', err)
+          toast({
+            title: 'Error',
+            description: 'Failed to delete sorting item',
+            variant: 'destructive',
+          })
+          return
+        }
+      }
+
+      // Remove from local state
       setEditSortingItems(editSortingItems.filter((_, i) => i !== index))
     }
   }
 
-  // Update sorting item
   const handleUpdateSortingItem = (
     index: number,
     field: keyof SortingItem,
@@ -377,7 +378,42 @@ const Sortings = () => {
     reset: resetEditForm,
   })
 
-  // Handle sort submission
+  const deleteMutation = useDeleteSorting({
+    onClose: () => {},
+    reset: () => {},
+  })
+
+  const handleAddSortingItem = () => {
+    setSortingItems([
+      ...sortingItems,
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        createdBy: userData?.userId || 0,
+      },
+    ])
+  }
+
+  const handleAddEditSortingItem = () => {
+    setEditSortingItems([
+      ...editSortingItems,
+      {
+        itemId: 0,
+        quantity: 0,
+        notes: '',
+        createdBy: userData?.userId || 0,
+        purchaseId: selectedPurchaseId || undefined,
+      },
+    ])
+  }
+
+  const handleRemoveSortingItem = (index: number) => {
+    if (sortingItems.length > 1) {
+      setSortingItems(sortingItems.filter((_, i) => i !== index))
+    }
+  }
+
   const handleSortSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -701,16 +737,24 @@ const Sortings = () => {
             ) : (
               paginatedSortings.map((group) => {
                 const { purchaseId, sortings } = group
+                const isComplete = isSortingComplete(sortings, purchaseId)
+                const headerBgClass = isComplete
+                  ? 'bg-green-100 hover:bg-green-100'
+                  : 'bg-amber-50 hover:bg-amber-50'
+                const headerTextClass = isComplete
+                  ? 'text-green-900'
+                  : 'text-amber-900'
+
                 return (
                   <React.Fragment key={purchaseId}>
                     {/* Header row for purchaseId */}
                     <TableRow
                       key={`header-${purchaseId}`}
-                      className="bg-amber-50 hover:bg-amber-50"
+                      className={headerBgClass}
                     >
                       <TableCell
                         colSpan={6}
-                        className="font-semibold text-amber-900"
+                        className={`font-semibold ${headerTextClass}`}
                       >
                         Purchase #{purchaseId} Sortings
                       </TableCell>

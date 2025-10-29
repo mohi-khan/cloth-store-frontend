@@ -11,6 +11,7 @@ import {
   createSale,
   createSorting,
   createVendor,
+  deleteSorting,
   editBankAccount,
   editCustomer,
   editSale,
@@ -25,6 +26,7 @@ import {
   getAllSales,
   getAllSortings,
   getAllVendors,
+  getAvailableItem,
 } from '@/utils/api'
 import type {
   CreateAccountHeadType,
@@ -56,6 +58,23 @@ export const useGetItems = () => {
         throw new Error('Token not found')
       }
       return getAllItems(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetAvailableItem = (id: number) => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['availableItems'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAvailableItem(id, token)
     },
     enabled: !!token,
     select: (data) => data,
@@ -390,6 +409,42 @@ export const useEditSorting = ({
   return mutation
 }
 
+export const useDeleteSorting = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ id, userId }: { id: number, userId: number }) => {
+      return deleteSorting(id, userId, token)
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success!',
+        description: 'sorted data deleted successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['sortings'] })
+
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error deleting sorting:', error)
+    },
+  })
+
+  return mutation
+}
+
+
+//customer
 export const useGetCustomers = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
@@ -558,6 +613,7 @@ export const useEditSale = ({
   return mutation
 }
 
+//account-head
 export const useGetAccountHeads = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
@@ -575,7 +631,6 @@ export const useGetAccountHeads = () => {
   })
 }
 
-//account-head
 export const useAddAccountHead = ({
   onClose,
   reset,

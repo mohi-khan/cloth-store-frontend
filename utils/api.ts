@@ -43,6 +43,17 @@ export async function getAllItems(token: string) {
   })
 }
 
+export async function getAvailableItem(id: number, token: string) {
+  return fetchApi<{availableQuantity: number}>({
+    url: `api/item/available-item/${id}`,
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 export async function createItem(
   data: CreateItemType,
   token: string
@@ -204,6 +215,21 @@ export async function editSorting(
     url: `api/sorting/edit/${id}`,
     method: 'PATCH',
     body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function deleteSorting(
+  id: number,
+  userId: number,
+  token: string
+) {
+  return fetchApi<number>({
+    url: `api/sorting/delete/${id}/${userId}`,
+    method: 'DELETE',
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
