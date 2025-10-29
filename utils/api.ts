@@ -43,6 +43,17 @@ export async function getAllItems(token: string) {
   })
 }
 
+export async function getAvailableItem(id: number, token: string) {
+  return fetchApi<{availableQuantity: number}>({
+    url: `api/item/available-item/${id}`,
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 export async function createItem(
   data: CreateItemType,
   token: string
