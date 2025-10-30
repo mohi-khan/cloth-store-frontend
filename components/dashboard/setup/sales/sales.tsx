@@ -43,6 +43,7 @@ import {
   useGetCustomers,
   useEditSale,
   useGetAvailableItem,
+  useDeleteSale,
 } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type {
@@ -65,6 +66,9 @@ interface SaleDetailRowProps {
   ) => void
   handleRemoveRow: (index: number) => void
   saleDetailsLength: number
+  isEditing: boolean
+  saleMasterId?: number
+  userData?: any
 }
 
 const SaleDetailRow: React.FC<SaleDetailRowProps> = ({
@@ -75,6 +79,9 @@ const SaleDetailRow: React.FC<SaleDetailRowProps> = ({
   handleDetailChange,
   handleRemoveRow,
   saleDetailsLength,
+  isEditing,
+  saleMasterId,
+  userData,
 }) => {
   // Local state to store available quantity for this specific row
   const [availableQuantity, setAvailableQuantity] = useState<number>(0)
@@ -356,7 +363,32 @@ const Sales = () => {
   }
 
   const handleRemoveRow = (index: number) => {
-    setSaleDetails((prev) => prev.filter((_, i) => i !== index))
+    if (saleDetails.length > 1) {
+      setSaleDetails(saleDetails.filter((_, i) => i !== index))
+    }
+  }
+
+  const handleRemoveEditSaleDetail = async (index: number) => {
+    if (saleDetails.length > 1) {
+      const detailToDelete = saleDetails[index]
+
+      // If the detail has a saleDetailsId, it exists in the database and needs to be deleted
+      if (detailToDelete.saleDetailsId) {
+        try {
+          await deleteMutation.mutateAsync({
+            saleMasterId: formData.salesMaster.saleMasterId || 0,
+            saleDetailsId: detailToDelete.saleDetailsId,
+            userId: userData?.userId || 0,
+          })
+        } catch (err) {
+          console.error('Error deleting sale detail:', err)
+          return
+        }
+      }
+
+      // Remove from local state
+      setSaleDetails(saleDetails.filter((_, i) => i !== index))
+    }
   }
 
   const resetForm = useCallback(() => {
@@ -410,6 +442,11 @@ const Sales = () => {
   const editMutation = useEditSale({
     onClose: closePopup,
     reset: resetForm,
+  })
+
+  const deleteMutation = useDeleteSale({
+    onClose: () => {},
+    reset: () => {},
   })
 
   const handleSort = (column: string) => {
@@ -1010,8 +1047,15 @@ const Sales = () => {
                       items={items}
                       handleItemSelect={handleItemSelect}
                       handleDetailChange={handleDetailChange}
-                      handleRemoveRow={handleRemoveRow}
+                      handleRemoveRow={
+                        formData.salesMaster.saleMasterId
+                          ? () => handleRemoveEditSaleDetail(index)
+                          : () => handleRemoveRow(index)
+                      }
                       saleDetailsLength={saleDetails.length}
+                      isEditing={!!formData.salesMaster.saleMasterId}
+                      saleMasterId={formData.salesMaster.saleMasterId}
+                      userData={userData}
                     />
                   ))}
                 </TableBody>

@@ -11,6 +11,7 @@ import {
   createSale,
   createSorting,
   createVendor,
+  deleteSale,
   deleteSorting,
   editBankAccount,
   editCustomer,
@@ -607,6 +608,40 @@ export const useEditSale = ({
     },
     onError: (error) => {
       console.error('Error editing sale:', error)
+    },
+  })
+
+  return mutation
+}
+
+export const useDeleteSale = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ saleMasterId, saleDetailsId, userId }: { saleMasterId: number, saleDetailsId: number, userId: number }) => {
+      return deleteSale(saleMasterId, saleDetailsId, userId, token)
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success!',
+        description: 'sale is deleted successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['sales'] })
+
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error deleting sale:', error)
     },
   })
 

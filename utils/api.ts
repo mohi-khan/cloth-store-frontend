@@ -321,6 +321,22 @@ export async function editSale(
   })
 }
 
+export async function deleteSale(
+  saleMasterId: number,
+  saleDetailsId: number,
+  userId: number,
+  token: string
+) {
+  return fetchApi<number>({
+    url: `api/sales/delete/${saleMasterId}/${saleDetailsId}/${userId}`,
+    method: 'DELETE',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 export async function getAllAccountHeads(token: string) {
   return fetchApi<GetAccountHeadType[]>({
     url: 'api/account-head/getAll',
