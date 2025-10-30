@@ -70,14 +70,12 @@ export const useGetAvailableItem = (id: number) => {
   useInitializeUser()
 
   return useQuery({
-    queryKey: ['availableItems'],
+    queryKey: ['availableItem', id], // ✅ include `id` here
     queryFn: () => {
-      if (!token) {
-        throw new Error('Token not found')
-      }
+      if (!token) throw new Error('Token not found')
       return getAvailableItem(id, token)
     },
-    enabled: !!token,
+    enabled: !!token && id > 0, // ✅ only run if token exists AND id > 0
     select: (data) => data,
   })
 }

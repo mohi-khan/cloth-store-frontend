@@ -1,14 +1,13 @@
 'use client'
 
-import {
-  TableCell,
-  TableRow,
-} from '@/components/ui/table'
+import type React from 'react'
+
+import { TableCell, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useGetAvailableItem } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { GetItemType, GetSaleDetailsType } from '@/utils/type'
+import type { GetItemType, GetSaleDetailsType } from '@/utils/type'
 import { useEffect, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 
@@ -38,32 +37,35 @@ export const SaleDetailRow: React.FC<SaleDetailRowProps> = ({
   handleRemoveRow,
   saleDetailsLength,
 }) => {
-  // Local state to store available quantity for this specific row
-  const [availableQuantity, setAvailableQuantity] = useState<number>(0)
+  const [availableQuantityMap, setAvailableQuantityMap] = useState<
+    Record<number, number>
+  >({})
 
-  // Only fetch when itemId is valid
   const shouldFetch = detail.itemId > 0
   const { data: availableItemData, refetch } = useGetAvailableItem(
     shouldFetch ? detail.itemId : 0
   )
 
-  // Update local state when data arrives
   useEffect(() => {
-    if (availableItemData?.data?.availableQuantity !== undefined) {
-      setAvailableQuantity(availableItemData.data.availableQuantity)
-    } else if (!shouldFetch) {
-      setAvailableQuantity(0)
+    if (
+      availableItemData?.data?.availableQuantity !== undefined &&
+      detail.itemId > 0
+    ) {
+      setAvailableQuantityMap((prev) => ({
+        ...prev,
+        [detail.itemId]: availableItemData?.data?.availableQuantity ?? 0,
+      }))
     }
-  }, [availableItemData, shouldFetch])
+  }, [availableItemData, detail.itemId])
 
-  // Refetch when itemId changes
   useEffect(() => {
     if (shouldFetch) {
       refetch()
-    } else {
-      setAvailableQuantity(0)
     }
   }, [detail.itemId, shouldFetch, refetch])
+
+  const availableQuantity =
+    detail.itemId > 0 ? (availableQuantityMap[detail.itemId] ?? 0) : 0
 
   return (
     <TableRow>

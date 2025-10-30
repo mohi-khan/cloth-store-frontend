@@ -22,14 +22,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import {
-  ArrowUpDown,
-  Search,
-  ShoppingCart,
-  Edit2,
-  Plus,
-  Trash2,
-} from 'lucide-react'
+import { ArrowUpDown, Search, ShoppingCart, Edit2, Plus } from 'lucide-react'
 import { Popup } from '@/utils/popup'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -43,6 +36,7 @@ import {
   useGetCustomers,
   useEditSale,
   useDeleteSale,
+  useGetAvailableItem,
 } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type {
@@ -52,6 +46,8 @@ import type {
   GetSalesType,
 } from '@/utils/type'
 import { SaleDetailRow } from './sale-details-row'
+import { toast } from '@/hooks/use-toast'
+import { getAvailableItem } from '@/utils/api'
 
 const Sales = () => {
   useInitializeUser()
@@ -205,7 +201,6 @@ const Sales = () => {
               itemId,
               itemName:
                 items?.find((itm) => itm.itemId === itemId)?.itemName || '',
-              rowId: `row-${Date.now()}-${index}`, // Update rowId to force re-render
             }
           : detail
       )
@@ -213,19 +208,22 @@ const Sales = () => {
   }
 
   const handleAddRow = () => {
-    setSaleDetails((prev) => [
-      ...prev,
-      {
-        itemId: 0,
-        itemName: '',
-        quantity: 0,
-        unitPrice: 0,
-        amount: 0,
-        createdBy: userData?.userId || 0,
-        saleDetailsId: undefined,
-        rowId: `row-${Date.now()}-${prev.length}`,
-      },
-    ])
+    setSaleDetails((prev) => {
+      console.log('🚀 ~ handleAddRow ~ prev:', prev.length + 1)
+      return [
+        ...prev,
+        {
+          itemId: 0,
+          itemName: '',
+          quantity: 0,
+          unitPrice: 0,
+          amount: 0,
+          createdBy: userData?.userId || 0,
+          saleDetailsId: undefined,
+          rowId: `${prev.length + 1}`,
+        },
+      ]
+    })
   }
 
   const handleRemoveRow = (index: number) => {
@@ -401,6 +399,17 @@ const Sales = () => {
 
   const totalPages = Math.max(1, Math.ceil(sortedSales.length / itemsPerPage))
 
+  const fetchAvailableQuantity = async (itemId: number): Promise<number> => {
+    try {
+      const data = await getAvailableItem(itemId, token)
+      return data?.data?.availableQuantity ?? 0
+    } catch (err) {
+      console.error('Error fetching available quantity:', err)
+      return 0
+    }
+  }
+  // const { data: availableItemData, refetch } = useGetAvailableItem(itemId)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -434,6 +443,27 @@ const Sales = () => {
         formData.salesMaster.bankAccountId === 0)
     ) {
       setError('Please select a bank account for bank payment')
+      return
+    }
+
+    try {
+      for (const detail of validSaleDetails) {
+        const availableQty = await fetchAvailableQuantity(detail.itemId)
+        console.log('🚀 ~ handleSubmit ~ availableQty:', availableQty)
+        const itemName = detail.itemName || 'Unknown item'
+
+        if (detail.quantity > availableQty) {
+          toast({
+            title: 'Error',
+            description: `Insufficient stock for "${itemName}". Available: ${availableQty}, Requested: ${detail.quantity}`,
+            variant: 'destructive',
+          })
+          return // Popup stays open on error
+        }
+      }
+    } catch (err) {
+      setError('Error validating stock availability')
+      console.error(err)
       return
     }
 
@@ -557,7 +587,6 @@ const Sales = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 mb-4">
           <div className="bg-amber-100 p-2 rounded-md">
@@ -587,7 +616,6 @@ const Sales = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader className="bg-amber-100">
@@ -702,7 +730,6 @@ const Sales = () => {
         </Table>
       </div>
 
-      {/* Pagination */}
       {sortedSales.length > 0 && (
         <div className="mt-4">
           <Pagination>
@@ -764,7 +791,6 @@ const Sales = () => {
         </div>
       )}
 
-      {/* Add/Edit Sale Popup */}
       <Popup
         isOpen={isPopupOpen}
         onClose={resetForm}
@@ -772,9 +798,7 @@ const Sales = () => {
         size="sm:max-w-5xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          {/* Master Section */}
           <div className="grid gap-4 md:grid-cols-2">
-            {/* Customer */}
             <div className="space-y-2">
               <Label htmlFor="customerId">Customer*</Label>
               <CustomCombobox
@@ -806,7 +830,6 @@ const Sales = () => {
               />
             </div>
 
-            {/* Sale Date */}
             <div className="space-y-2">
               <Label htmlFor="saleDate">Sale Date*</Label>
               <Input
@@ -825,7 +848,6 @@ const Sales = () => {
               />
             </div>
 
-            {/* Discount Amount */}
             <div className="space-y-2">
               <Label htmlFor="discountAmount">Discount Amount</Label>
               <Input
@@ -839,7 +861,6 @@ const Sales = () => {
               />
             </div>
 
-            {/* Bank Account (only if bank payment) */}
             {formData.salesMaster.paymentType === 'bank' && (
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="bankAccountId">Bank Account*</Label>
@@ -874,7 +895,6 @@ const Sales = () => {
               </div>
             )}
 
-            {/* Notes */}
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="notes">Notes</Label>
               <Textarea
@@ -888,7 +908,6 @@ const Sales = () => {
             </div>
           </div>
 
-          {/* Sale Details Section */}
           <div className="space-y-3 border-t pt-4">
             <h3 className="font-semibold">Sale Details</h3>
 
