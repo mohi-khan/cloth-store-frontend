@@ -21,6 +21,7 @@ import {
   CreateAccountHeadType,
   GetExpenseType,
   CreateExpenseType,
+  GetInventoryItemsType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -382,6 +383,17 @@ export async function createExpense(
     url: 'api/expense/create',
     method: 'POST',
     body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllInventoryItems(token: string) {
+  return fetchApi<GetInventoryItemsType[]>({
+    url: 'api/dashboard/item-summary',
+    method: 'GET',
     headers: {
       Authorization: token,
       'Content-Type': 'application/json',

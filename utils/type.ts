@@ -275,7 +275,12 @@ export type GetExpenseType = z.infer<typeof expenseSchema> & {
 }
 export type CreateExpenseType = z.infer<typeof createExpenseSchema>
 
-
+export const inventoryItems = z.object({
+  item_name: z.string(),
+  totQty: z.number(),
+  price: z.number(),
+});
+export type GetInventoryItemsType = z.infer<typeof inventoryItems>;
 
 
 
