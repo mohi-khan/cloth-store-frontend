@@ -285,7 +285,7 @@ export type GetInventoryItemsType = z.infer<typeof inventoryItems>;
 export const transactionSchema = z.object({
   transactionId: z.number().int().optional(), // auto-increment
   transactionType: z.enum(['payment', 'recieved', 'contra']).nullable(),
-  isCash: z.boolean().optional().default(false),
+  isCash: z.boolean().default(true),
   bankId: z.number().int().nullable(),
   customerId: z.number().int().nullable(),
   vendorId: z.number().int().nullable(),
