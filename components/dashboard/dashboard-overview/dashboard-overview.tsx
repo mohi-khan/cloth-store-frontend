@@ -16,6 +16,19 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import {
+  useGetInventoryItems,
+  useGetCustomerPaymentDetails,
+} from '@/hooks/use-api'
+import { Popup } from '@/utils/popup'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 const DashboardOverview = () => {
   useInitializeUser()
@@ -25,13 +38,38 @@ const DashboardOverview = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
 
-  const { data: currentMonthClaimsCount } = []
-  console.log(
-    '🚀 ~ DashboardOverview ~ currentMonthClaimsCount:',
-    currentMonthClaimsCount
-  )
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean
+    type:
+      | 'inventory'
+      | 'customer-payment'
+      | 'claim-month'
+      | 'claim-value'
+      | 'purchases'
+      | null
+    title: string
+  }>({
+    isOpen: false,
+    type: null,
+    title: '',
+  })
 
-  const { data: currentMonthTotalClaimAmount } = []
+  const { data: InventoryItems } = useGetInventoryItems()
+  console.log("🚀 ~ DashboardOverview ~ InventoryItems:", InventoryItems)
+  const { data: CustomerPaymentDetails } = useGetCustomerPaymentDetails()
+  console.log("🚀 ~ DashboardOverview ~ CustomerPaymentDetails:", CustomerPaymentDetails)
+
+  const totalAmount = InventoryItems?.data?.reduce((sum: number, item: any) => {
+    const qty = Math.max(item.totQty, 0)
+    return sum + qty * item.price
+  }, 0)
+
+  const totalUnpaidAmount = CustomerPaymentDetails?.data?.reduce(
+    (sum: number, item: any) => {
+      return sum + (item.unpaid_amount || 0)
+    },
+    0
+  )
 
   useEffect(() => {
     const checkUserData = () => {
@@ -49,31 +87,67 @@ const DashboardOverview = () => {
     checkUserData()
   }, [userData, token, router])
 
-  // Sample data for the pie chart with better structure
-  const pieData = [
-    { name: 'Equipment', value: 95000, percentage: 79.2, color: '#059669' },
-    { name: 'Furniture', value: 15000, percentage: 12.5, color: '#0891b2' },
-    { name: 'Technology', value: 8000, percentage: 6.7, color: '#7c3aed' },
-    { name: 'Other', value: 2000, percentage: 1.6, color: '#e5e7eb' },
-  ]
+  const staticModalData = {
+    'claim-month': [
+      { description: 'Claim 001', amount: 15000 },
+      { description: 'Claim 002', amount: 8500 },
+      { description: 'Claim 003', amount: 12000 },
+    ],
+    'claim-value': [
+      { category: 'Equipment', value: 45000 },
+      { category: 'Maintenance', value: 35000 },
+      { category: 'Other', value: 40000 },
+    ],
+    purchases: [
+      { itemName: 'Office Supplies', quantity: 150, totalAmount: 45000 },
+      { itemName: 'Equipment', quantity: 25, totalAmount: 75000 },
+    ],
+  }
 
-  // Metric cards dataformat
+  const openModal = (
+    type:
+      | 'inventory'
+      | 'customer-payment'
+      | 'claim-month'
+      | 'claim-value'
+      | 'purchases'
+  ) => {
+    const titles = {
+      inventory: 'Total Inventory Items',
+      'customer-payment': 'Customer Payment Details',
+      'claim-month': "This Month's Claims",
+      'claim-value': 'Claim Value Details',
+      purchases: 'Fiscal Year Purchases',
+    }
+    setModalState({
+      isOpen: true,
+      type,
+      title: titles[type],
+    })
+  }
+
+  const closeModal = () => {
+    setModalState({ isOpen: false, type: null, title: '' })
+  }
+
   const metrics = [
     {
-      title: 'This Months Claims',
-      value: currentMonthClaimsCount?.data || 0,
+      title: 'Total Inventory amount',
+      value: totalAmount || 0,
       icon: Settings,
       color: 'bg-yellow-500',
       trend: '+12%',
       trendUp: true,
+      onClick: () => openModal('inventory'),
     },
     {
-      title: 'This Months Claim Amount',
-      value: currentMonthTotalClaimAmount?.data || 0,
+      title: 'Customer Payment Details',
+      value: totalUnpaidAmount || 0,
       icon: BarChart3,
       color: 'bg-emerald-500',
       trend: '+8.2%',
       trendUp: true,
+      onClick: () => openModal('customer-payment'),
     },
     {
       title: 'Claim Value',
@@ -82,6 +156,7 @@ const DashboardOverview = () => {
       color: 'bg-red-500',
       trend: '+5.1%',
       trendUp: true,
+      onClick: () => openModal('claim-value'),
     },
     {
       title: 'Fiscal Year Purchases',
@@ -91,10 +166,10 @@ const DashboardOverview = () => {
       color: 'bg-purple-500',
       trend: '+15.3%',
       trendUp: true,
+      onClick: () => openModal('purchases'),
     },
   ]
 
-  // Calendar functions
   const monthNames = [
     'January',
     'February',
@@ -140,7 +215,6 @@ const DashboardOverview = () => {
 
     const days = []
 
-    // Previous month's trailing days
     const prevMonth = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth() - 1,
@@ -159,7 +233,6 @@ const DashboardOverview = () => {
       )
     }
 
-    // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
       const isToday = isCurrentMonth && day === today.getDate()
       days.push(
@@ -176,7 +249,6 @@ const DashboardOverview = () => {
       )
     }
 
-    // Next month's leading days
     const remainingCells = 42 - days.length
     for (let day = 1; day <= remainingCells; day++) {
       days.push(
@@ -199,7 +271,7 @@ const DashboardOverview = () => {
         <div className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-semibold">{data.name}</p>
           <p className="text-sm text-gray-600">
-            Value: ฿{data.value.toLocaleString()}
+            Value: {data.value.toLocaleString()}
           </p>
           <p className="text-sm text-gray-600">
             Percentage: {data.percentage}%
@@ -208,6 +280,253 @@ const DashboardOverview = () => {
       )
     }
     return null
+  }
+
+  const renderModalContent = () => {
+    switch (modalState.type) {
+      case 'inventory':
+        return (
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item Name</TableHead>
+                    <TableHead className="text-right">Quantity</TableHead>
+                    <TableHead className="text-right">Price </TableHead>
+                    <TableHead className="text-right">Total Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {InventoryItems?.data && InventoryItems.data.length > 0 ? (
+                    InventoryItems.data.map((item: any, index: number) => {
+                      const itemTotal = Math.max(item.totQty, 0) * item.price
+                      return (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">
+                            {item.item_name}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.totQty}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.price.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {itemTotal.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-6">
+                        No inventory items found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {InventoryItems?.data && InventoryItems.data.length > 0 && (
+              <div className="pt-4 border-t">
+                <div className="flex justify-end pr-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-4">
+                      <span className="font-semibold">
+                        Total Inventory Value:
+                      </span>
+                      <span className="text-2xl font-bold text-yellow-600">
+                        {totalAmount?.toLocaleString('th-TH', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+
+      case 'customer-payment':
+        return (
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer Name</TableHead>
+                    <TableHead className="text-right">Total Sales</TableHead>
+                    <TableHead className="text-right">Total Discount</TableHead>
+                    <TableHead className="text-right">Total Received</TableHead>
+                    <TableHead className="text-right">Unpaid Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {CustomerPaymentDetails?.data &&
+                  CustomerPaymentDetails.data.length > 0 ? (
+                    CustomerPaymentDetails.data.map(
+                      (item: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">
+                            {item.customer_name}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.total_sales.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.total_discount.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.total_received.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-red-600">
+                            {item.unpaid_amount.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-6">
+                        No customer payment details found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {CustomerPaymentDetails?.data &&
+              CustomerPaymentDetails.data.length > 0 && (
+                <div className="pt-4 border-t">
+                  <div className="flex justify-end pr-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4">
+                        <span className="font-semibold">
+                          Total Unpaid Amount:
+                        </span>
+                        <span className="text-2xl font-bold text-red-600">
+                          {totalUnpaidAmount?.toLocaleString('th-TH', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+          </div>
+        )
+
+      case 'claim-month':
+        return (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Claim Description</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {staticModalData['claim-month'].map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.description}</TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {item.amount.toLocaleString('th-TH', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )
+
+      case 'claim-value':
+        return (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {staticModalData['claim-value'].map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {item.value.toLocaleString('th-TH', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )
+
+      case 'purchases':
+        return (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item Name</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead className="text-right">Total Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {staticModalData.purchases.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.itemName}</TableCell>
+                    <TableCell className="text-right">
+                      {item.quantity}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {item.totalAmount.toLocaleString('th-TH', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )
+
+      default:
+        return null
+    }
   }
 
   if (isLoading) {
@@ -250,7 +569,8 @@ const DashboardOverview = () => {
         {metrics.map((metric, index) => (
           <Card
             key={index}
-            className="hover:shadow-lg transition-shadow duration-200"
+            className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+            onClick={metric.onClick}
           >
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
@@ -259,7 +579,12 @@ const DashboardOverview = () => {
                     {metric.title}
                   </p>
                   <p className="text-2xl font-bold text-gray-900 mb-1">
-                    {metric.value}
+                    {typeof metric.value === 'number'
+                      ? metric.value.toLocaleString('th-TH', {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })
+                      : metric.value}
                   </p>
                   {metric.subtitle && (
                     <p className="text-sm text-gray-500">{metric.subtitle}</p>
@@ -276,7 +601,9 @@ const DashboardOverview = () => {
                   </div>
                 </div>
                 <div className={`${metric.color} p-3 rounded-xl shadow-sm`}>
-                  <metric.icon className="h-6 w-6 text-white" />
+                  {metric.icon && (
+                    <metric.icon className="h-6 w-6 text-white" />
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -334,7 +661,7 @@ const DashboardOverview = () => {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-gray-900">
-                        ฿{item.value.toLocaleString()}
+                        {item.value.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-500">
                         {item.percentage}%
@@ -379,7 +706,6 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-1">
-              {/* Days of the week */}
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                 <div
                   key={day}
@@ -388,14 +714,29 @@ const DashboardOverview = () => {
                   {day}
                 </div>
               ))}
-              {/* Calendar days */}
               {renderCalendar()}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Popup
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.title}
+        size="sm:max-w-4xl"
+      >
+        <div className="py-4">{renderModalContent()}</div>
+      </Popup>
     </div>
   )
 }
+
+const pieData = [
+  { name: 'Equipment', value: 95000, percentage: 79.2, color: '#059669' },
+  { name: 'Furniture', value: 15000, percentage: 12.5, color: '#0891b2' },
+  { name: 'Technology', value: 8000, percentage: 6.7, color: '#7c3aed' },
+  { name: 'Other', value: 2000, percentage: 1.6, color: '#e5e7eb' },
+]
 
 export default DashboardOverview

@@ -10,6 +10,7 @@ import {
   createPurchase,
   createSale,
   createSorting,
+  createTransaction,
   createVendor,
   deleteSale,
   deleteSorting,
@@ -20,12 +21,15 @@ import {
   editVendor,
   getAllAccountHeads,
   getAllBankAccounts,
+  getAllCustomerPaymentDetails,
   getAllCustomers,
   getAllExpenses,
+  getAllInventoryItems,
   getAllItems,
   getAllPurchases,
   getAllSales,
   getAllSortings,
+  getAllTransaction,
   getAllVendors,
   getAvailableItem,
 } from '@/utils/api'
@@ -38,6 +42,7 @@ import type {
   CreatePurchaseType,
   CreateSalesType,
   CreateSortingType,
+  CreateTransactionType,
   CreateVendorType,
   GetBankAccountType,
   GetCustomerType,
@@ -736,6 +741,89 @@ export const useAddExpense = ({
     },
     onError: (error) => {
       console.error('Error adding item:', error)
+    },
+  })
+
+  return mutation
+}
+
+//dashboard
+export const useGetInventoryItems = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['inventoryItems'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllInventoryItems(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetCustomerPaymentDetails = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['customerPaymentDetails'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllCustomerPaymentDetails(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+//transaction
+export const useGetTransactions = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllTransaction(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddTransaction = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateTransactionType) => {
+      return createTransaction(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('transaction added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding transaction:', error)
     },
   })
 

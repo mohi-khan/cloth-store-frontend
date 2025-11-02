@@ -21,6 +21,10 @@ import {
   CreateAccountHeadType,
   GetExpenseType,
   CreateExpenseType,
+  GetInventoryItemsType,
+  GetTransactionType,
+  CreateTransactionType,
+  GetCustomerPaymentDetailsType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -380,6 +384,54 @@ export async function createExpense(
 ) {
   return fetchApi<CreateExpenseType>({
     url: 'api/expense/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllInventoryItems(token: string) {
+  return fetchApi<GetInventoryItemsType[]>({
+    url: 'api/dashboard/item-summary',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllCustomerPaymentDetails(token: string) {
+  return fetchApi<GetCustomerPaymentDetailsType[]>({
+    url: 'api/dashboard/remaining-amount',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllTransaction(token: string) {
+  return fetchApi<GetTransactionType[]>({
+    url: 'api/transaction/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createTransaction(
+  data: CreateTransactionType,
+  token: string
+) {
+  return fetchApi<CreateTransactionType>({
+    url: 'api/transaction/create',
     method: 'POST',
     body: data,
     headers: {
