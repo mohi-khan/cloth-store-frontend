@@ -282,6 +282,16 @@ export const inventoryItems = z.object({
 });
 export type GetInventoryItemsType = z.infer<typeof inventoryItems>;
 
+export const customerPaymentSchema = z.object({
+  customer_id: z.number(),
+  customer_name: z.string(),
+  total_sales: z.number(),
+  total_discount: z.number(),
+  total_received: z.number(),
+  unpaid_amount: z.number(),
+});
+export type GetCustomerPaymentDetailsType = z.infer<typeof customerPaymentSchema>;
+
 export const transactionSchema = z.object({
   transactionId: z.number().int().optional(), // auto-increment
   transactionType: z.enum(['payment', 'recieved', 'contra']).nullable(),

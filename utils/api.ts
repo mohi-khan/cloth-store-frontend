@@ -24,6 +24,7 @@ import {
   GetInventoryItemsType,
   GetTransactionType,
   CreateTransactionType,
+  GetCustomerPaymentDetailsType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -395,6 +396,17 @@ export async function createExpense(
 export async function getAllInventoryItems(token: string) {
   return fetchApi<GetInventoryItemsType[]>({
     url: 'api/dashboard/item-summary',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllCustomerPaymentDetails(token: string) {
+  return fetchApi<GetCustomerPaymentDetailsType[]>({
+    url: 'api/dashboard/remaining-amount',
     method: 'GET',
     headers: {
       Authorization: token,

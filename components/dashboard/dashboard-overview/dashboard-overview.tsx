@@ -16,7 +16,10 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useGetInventoryItems } from '@/hooks/use-api'
+import {
+  useGetInventoryItems,
+  useGetCustomerPaymentDetails,
+} from '@/hooks/use-api'
 import { Popup } from '@/utils/popup'
 import {
   Table,
@@ -37,7 +40,13 @@ const DashboardOverview = () => {
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean
-    type: 'inventory' | 'claim-month' | 'claim-value' | 'purchases' | null
+    type:
+      | 'inventory'
+      | 'customer-payment'
+      | 'claim-month'
+      | 'claim-value'
+      | 'purchases'
+      | null
     title: string
   }>({
     isOpen: false,
@@ -46,13 +55,21 @@ const DashboardOverview = () => {
   })
 
   const { data: InventoryItems } = useGetInventoryItems()
-
-  const { data: currentMonthTotalClaimAmount } = []
+  console.log("🚀 ~ DashboardOverview ~ InventoryItems:", InventoryItems)
+  const { data: CustomerPaymentDetails } = useGetCustomerPaymentDetails()
+  console.log("🚀 ~ DashboardOverview ~ CustomerPaymentDetails:", CustomerPaymentDetails)
 
   const totalAmount = InventoryItems?.data?.reduce((sum: number, item: any) => {
     const qty = Math.max(item.totQty, 0)
     return sum + qty * item.price
   }, 0)
+
+  const totalUnpaidAmount = CustomerPaymentDetails?.data?.reduce(
+    (sum: number, item: any) => {
+      return sum + (item.unpaid_amount || 0)
+    },
+    0
+  )
 
   useEffect(() => {
     const checkUserData = () => {
@@ -88,10 +105,16 @@ const DashboardOverview = () => {
   }
 
   const openModal = (
-    type: 'inventory' | 'claim-month' | 'claim-value' | 'purchases'
+    type:
+      | 'inventory'
+      | 'customer-payment'
+      | 'claim-month'
+      | 'claim-value'
+      | 'purchases'
   ) => {
     const titles = {
       inventory: 'Total Inventory Items',
+      'customer-payment': 'Customer Payment Details',
       'claim-month': "This Month's Claims",
       'claim-value': 'Claim Value Details',
       purchases: 'Fiscal Year Purchases',
@@ -118,13 +141,13 @@ const DashboardOverview = () => {
       onClick: () => openModal('inventory'),
     },
     {
-      title: 'This Months Claim Amount',
-      value: currentMonthTotalClaimAmount?.data || '0',
+      title: 'Customer Payment Details',
+      value: totalUnpaidAmount || 0,
       icon: BarChart3,
       color: 'bg-emerald-500',
       trend: '+8.2%',
       trendUp: true,
-      onClick: () => openModal('claim-month'),
+      onClick: () => openModal('customer-payment'),
     },
     {
       title: 'Claim Value',
@@ -330,6 +353,89 @@ const DashboardOverview = () => {
                 </div>
               </div>
             )}
+          </div>
+        )
+
+      case 'customer-payment':
+        return (
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer Name</TableHead>
+                    <TableHead className="text-right">Total Sales</TableHead>
+                    <TableHead className="text-right">Total Discount</TableHead>
+                    <TableHead className="text-right">Total Received</TableHead>
+                    <TableHead className="text-right">Unpaid Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {CustomerPaymentDetails?.data &&
+                  CustomerPaymentDetails.data.length > 0 ? (
+                    CustomerPaymentDetails.data.map(
+                      (item: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">
+                            {item.customer_name}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.total_sales.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.total_discount.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.total_received.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-red-600">
+                            {item.unpaid_amount.toLocaleString('th-TH', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-6">
+                        No customer payment details found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {CustomerPaymentDetails?.data &&
+              CustomerPaymentDetails.data.length > 0 && (
+                <div className="pt-4 border-t">
+                  <div className="flex justify-end pr-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4">
+                        <span className="font-semibold">
+                          Total Unpaid Amount:
+                        </span>
+                        <span className="text-2xl font-bold text-red-600">
+                          {totalUnpaidAmount?.toLocaleString('th-TH', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
           </div>
         )
 

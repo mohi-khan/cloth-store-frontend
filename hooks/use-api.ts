@@ -21,6 +21,7 @@ import {
   editVendor,
   getAllAccountHeads,
   getAllBankAccounts,
+  getAllCustomerPaymentDetails,
   getAllCustomers,
   getAllExpenses,
   getAllInventoryItems,
@@ -758,6 +759,23 @@ export const useGetInventoryItems = () => {
         throw new Error('Token not found')
       }
       return getAllInventoryItems(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetCustomerPaymentDetails = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['customerPaymentDetails'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllCustomerPaymentDetails(token)
     },
     enabled: !!token,
     select: (data) => data,
