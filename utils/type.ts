@@ -282,7 +282,28 @@ export const inventoryItems = z.object({
 });
 export type GetInventoryItemsType = z.infer<typeof inventoryItems>;
 
-
+export const transactionSchema = z.object({
+  transactionId: z.number().int().optional(), // auto-increment
+  transactionType: z.enum(['payment', 'recieved', 'contra']).nullable(),
+  isCash: z.boolean().optional().default(false),
+  bankId: z.number().int().nullable(),
+  customerId: z.number().int().nullable(),
+  vendorId: z.number().int().nullable(),
+  transactionDate: z.string().nullable(), // 'YYYY-MM-DD'
+  amount: z.number().nullable(),
+  createdBy: z.number().int(),
+  createdAt: z.string().datetime(), // or z.date() if you prefer date object
+  updatedBy: z.number().int().nullable(),
+  updatedAt: z.string().datetime().nullable(),
+})
+export type CreateTransactionType = z.infer<typeof transactionSchema>
+export type GetTransactionType = z.infer<typeof transactionSchema> & {
+  bankName: string | null
+  bankAccount: string | null
+  bankAccountName: string | null
+  customerName: string | null
+  vendorName: string | null
+}
 
 export interface User {
   userId: number

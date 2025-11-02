@@ -74,6 +74,10 @@ export function DashboardSidebar() {
           title: 'Expenses',
           href: '/dashboard/setup/expenses',
         },
+        {
+          title: 'Transactions',
+          href: '/dashboard/setup/transactions',
+        },
       ],
     },
     {

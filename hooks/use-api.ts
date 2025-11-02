@@ -10,6 +10,7 @@ import {
   createPurchase,
   createSale,
   createSorting,
+  createTransaction,
   createVendor,
   deleteSale,
   deleteSorting,
@@ -27,6 +28,7 @@ import {
   getAllPurchases,
   getAllSales,
   getAllSortings,
+  getAllTransaction,
   getAllVendors,
   getAvailableItem,
 } from '@/utils/api'
@@ -39,6 +41,7 @@ import type {
   CreatePurchaseType,
   CreateSalesType,
   CreateSortingType,
+  CreateTransactionType,
   CreateVendorType,
   GetBankAccountType,
   GetCustomerType,
@@ -759,4 +762,52 @@ export const useGetInventoryItems = () => {
     enabled: !!token,
     select: (data) => data,
   })
+}
+
+//transaction
+export const useGetTransactions = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllTransaction(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddTransaction = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateTransactionType) => {
+      return createTransaction(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('transaction added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding transaction:', error)
+    },
+  })
+
+  return mutation
 }
