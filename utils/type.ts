@@ -319,6 +319,9 @@ export type GetTransactionType = z.infer<typeof transactionSchema> & {
 export const OpeningBalanceSchema = z.object({
   openingBalanceId: z.number().optional(),
   openingAmount: z.number(),
+  isParty: z.boolean(),
+  customerId: z.number().nullable(),
+  type: z.enum(['debit', 'credit']),
   createdBy: z.number(),
   createdAt: z.string(),
   updatedBy: z.number().nullable(),
