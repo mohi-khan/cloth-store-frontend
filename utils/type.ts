@@ -192,6 +192,7 @@ export const saleDetailsSchema = z.object({
   saleDetailsId: z.number().int().optional(),
   salesMasterId: z.number().int().optional(),
   itemId: z.number().int(),
+  avgPrice: z.number().int().optional(),
   quantity: z.number().int().min(1, 'Quantity must be at least 1'),
   amount: z.number().min(0, 'Amount must be positive'),
   unitPrice: z.number().min(0, 'Unit price must be positive'),
