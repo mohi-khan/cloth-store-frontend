@@ -295,7 +295,7 @@ export type GetCustomerPaymentDetailsType = z.infer<typeof customerPaymentSchema
 
 export const transactionSchema = z.object({
   transactionId: z.number().int().optional(), // auto-increment
-  transactionType: z.enum(['payment', 'recieved', 'contra']).nullable(),
+  transactionType: z.enum(['payment', 'received', 'contra']).nullable(),
   isCash: z.boolean().default(true),
   bankId: z.number().int().nullable(),
   customerId: z.number().int().nullable(),
@@ -319,6 +319,9 @@ export type GetTransactionType = z.infer<typeof transactionSchema> & {
 export const OpeningBalanceSchema = z.object({
   openingBalanceId: z.number().optional(),
   openingAmount: z.number(),
+  isParty: z.boolean(),
+  customerId: z.number().nullable(),
+  type: z.enum(['debit', 'credit']),
   createdBy: z.number(),
   createdAt: z.string(),
   updatedBy: z.number().nullable(),

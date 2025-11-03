@@ -31,7 +31,19 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import formatDate from '@/utils/formatDate'
-import { useAddOpeningBalance, useGetOpeningBalances } from '@/hooks/use-api'
+import {
+  useAddOpeningBalance,
+  useGetCustomers,
+  useGetOpeningBalances,
+} from '@/hooks/use-api'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 const OpeningBalance = () => {
   useInitializeUser()
@@ -39,6 +51,7 @@ const OpeningBalance = () => {
   const [token] = useAtom(tokenAtom)
 
   const { data: openingBalances } = useGetOpeningBalances()
+  const { data: customers } = useGetCustomers()
 
   const router = useRouter()
 
@@ -70,6 +83,9 @@ const OpeningBalance = () => {
 
   const [formData, setFormData] = useState<CreateOpeningBalanceType>({
     openingAmount: 0,
+    isParty: false,
+    customerId: null,
+    type: 'debit',
     createdBy: userData?.userId || 0,
     createdAt: new Date().toISOString(),
     updatedBy: null,
@@ -99,6 +115,9 @@ const OpeningBalance = () => {
   const resetForm = () => {
     setFormData({
       openingAmount: 0,
+      isParty: false,
+      customerId: null,
+      type: 'debit',
       createdBy: userData?.userId || 0,
       createdAt: new Date().toISOString(),
       updatedBy: null,
@@ -180,6 +199,23 @@ const OpeningBalance = () => {
     }
   }, [mutation.error])
 
+  const handleSelectChange = (name: string, value: string) => {
+    if (name === 'isParty') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value === 'true',
+        customerId: value === 'true' ? prev.customerId : null,
+      }))
+    } else if (name === 'type') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value as 'debit' | 'credit',
+      }))
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: Number(value) }))
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -202,6 +238,7 @@ const OpeningBalance = () => {
           <Button
             className="bg-amber-400 hover:bg-amber-500 text-black"
             onClick={() => setIsPopupOpen(true)}
+            disabled={openingBalances?.data?.length !== 0}
           >
             Add
           </Button>
@@ -328,7 +365,7 @@ const OpeningBalance = () => {
         size="sm:max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="openingAmount">Opening Amount*</Label>
               <Input
@@ -342,7 +379,71 @@ const OpeningBalance = () => {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Type*</Label>
+              <Select
+                name="type"
+                value={formData.type}
+                onValueChange={(value) => handleSelectChange('type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="debit">Debit</SelectItem>
+                  <SelectItem value="credit">Credit</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="isParty">Is Party*</Label>
+              <Select
+                name="isParty"
+                value={formData.isParty ? 'true' : 'false'}
+                onValueChange={(value) => handleSelectChange('isParty', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Yes</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {formData.isParty && (
+            <div className="space-y-2">
+              <Label htmlFor="customerId">Customer*</Label>
+              <CustomCombobox
+                items={
+                  customers?.data?.map((customer) => ({
+                    id: customer?.customerId?.toString() || '0',
+                    name: customer.name || 'Unnamed customer',
+                  })) || []
+                }
+                value={
+                  formData?.customerId && formData.customerId > 0
+                    ? {
+                        id: formData?.customerId.toString(),
+                        name:
+                          customers?.data?.find(
+                            (c) => c.customerId === formData.customerId
+                          )?.name || '',
+                      }
+                    : null
+                }
+                onChange={(value) =>
+                  handleSelectChange(
+                    'customerId',
+                    value ? String(value.id) : '0'
+                  )
+                }
+                placeholder="Select customer"
+              />
+            </div>
+          )}
 
           {error && (
             <div className="text-sm text-red-600 bg-red-50 p-2 rounded">

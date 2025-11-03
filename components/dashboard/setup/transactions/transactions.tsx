@@ -72,7 +72,7 @@ const Transactions = () => {
     bankId: null,
     customerId: null,
     vendorId: null,
-    transactionDate: null,
+    transactionDate: new Date().toISOString().split('T')[0],
     amount: null,
     createdBy: userData?.userId || 0,
     createdAt: new Date().toISOString(),
@@ -105,7 +105,7 @@ const Transactions = () => {
     } else if (name === 'transactionType') {
       setFormData((prev) => ({
         ...prev,
-        [name]: value as 'payment' | 'recieved' | 'contra',
+        [name]: value as 'payment' | 'received' | 'contra',
         vendorId: null,
         customerId: null,
       }))
@@ -223,7 +223,7 @@ const Transactions = () => {
       setError('Please select a vendor for payment transactions')
       return
     }
-    if (formData.transactionType === 'recieved' && !formData.customerId) {
+    if (formData.transactionType === 'received' && !formData.customerId) {
       setError('Please select a customer for received transactions')
       return
     }
@@ -237,7 +237,7 @@ const Transactions = () => {
       const submitData: CreateTransactionType = {
         transactionType: formData.transactionType as
           | 'payment'
-          | 'recieved'
+          | 'received'
           | 'contra',
         isCash: formData.isCash,
         bankId: formData.bankId,
@@ -476,7 +476,7 @@ const Transactions = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="payment">Payment</SelectItem>
-                  <SelectItem value="recieved">Received</SelectItem>
+                  <SelectItem value="received">Received</SelectItem>
                   <SelectItem value="contra">Contra</SelectItem>
                 </SelectContent>
               </Select>
@@ -516,7 +516,7 @@ const Transactions = () => {
             )}
 
             {/* Customer (shown for received transactions) */}
-            {formData.transactionType === 'recieved' && (
+            {formData.transactionType === 'received' && (
               <div className="space-y-2">
                 <Label htmlFor="customerId">Customer*</Label>
                 <CustomCombobox
