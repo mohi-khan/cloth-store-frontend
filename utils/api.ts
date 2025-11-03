@@ -25,6 +25,8 @@ import {
   GetTransactionType,
   CreateTransactionType,
   GetCustomerPaymentDetailsType,
+  GetOpeningBalanceType,
+  CreateOpeningBalanceType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -432,6 +434,32 @@ export async function createTransaction(
 ) {
   return fetchApi<CreateTransactionType>({
     url: 'api/transaction/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllOpeningBalances(token: string) {
+  return fetchApi<GetOpeningBalanceType[]>({
+    url: 'api/opening-balance/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createOpeningBalance(
+  data: CreateOpeningBalanceType,
+  token: string
+) {
+  return fetchApi<CreateOpeningBalanceType>({
+    url: 'api/opening-balance/create',
     method: 'POST',
     body: data,
     headers: {

@@ -141,7 +141,7 @@ const DashboardOverview = () => {
       onClick: () => openModal('inventory'),
     },
     {
-      title: 'Customer Payment Details',
+      title: 'Total Unpaid Amount',
       value: totalUnpaidAmount || 0,
       icon: BarChart3,
       color: 'bg-emerald-500',
