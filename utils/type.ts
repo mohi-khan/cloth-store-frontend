@@ -315,6 +315,17 @@ export type GetTransactionType = z.infer<typeof transactionSchema> & {
   vendorName: string | null
 }
 
+export const OpeningBalanceSchema = z.object({
+  openingBalanceId: z.number().optional(),
+  openingAmount: z.number(),
+  createdBy: z.number(),
+  createdAt: z.string(),
+  updatedBy: z.number().nullable(),
+  updatedAt: z.string().nullable(),
+});
+export type CreateOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
+export type GetOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
+
 export interface User {
   userId: number
   username: string

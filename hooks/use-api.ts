@@ -7,6 +7,7 @@ import {
   createCustomer,
   createExpense,
   createItem,
+  createOpeningBalance,
   createPurchase,
   createSale,
   createSorting,
@@ -26,6 +27,7 @@ import {
   getAllExpenses,
   getAllInventoryItems,
   getAllItems,
+  getAllOpeningBalances,
   getAllPurchases,
   getAllSales,
   getAllSortings,
@@ -39,6 +41,7 @@ import type {
   CreateCustomerType,
   CreateExpenseType,
   CreateItemType,
+  CreateOpeningBalanceType,
   CreatePurchaseType,
   CreateSalesType,
   CreateSortingType,
@@ -699,6 +702,7 @@ export const useAddAccountHead = ({
   return mutation
 }
 
+//expense
 export const useGetExpenses = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
@@ -716,7 +720,6 @@ export const useGetExpenses = () => {
   })
 }
 
-//account-head
 export const useAddExpense = ({
   onClose,
   reset,
@@ -824,6 +827,54 @@ export const useAddTransaction = ({
     },
     onError: (error) => {
       console.error('Error adding transaction:', error)
+    },
+  })
+
+  return mutation
+}
+
+//opening-balance
+export const useGetOpeningBalances = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['openingBalances'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllOpeningBalances(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddOpeningBalance = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateOpeningBalanceType) => {
+      return createOpeningBalance(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('account head added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['openingBalances'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding item:', error)
     },
   })
 

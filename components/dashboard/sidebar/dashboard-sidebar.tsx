@@ -78,6 +78,10 @@ export function DashboardSidebar() {
           title: 'Transactions',
           href: '/dashboard/setup/transactions',
         },
+        {
+          title: 'Opening Balance',
+          href: '/dashboard/setup/opening-balance',
+        },
       ],
     },
     {
