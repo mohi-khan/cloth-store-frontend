@@ -1,4 +1,4 @@
-import Transactions from '@/components/dashboard/setup/transactions/transactions';
+import Transactions from '@/components/dashboard/trade-management/transactions/transactions';
 import React from 'react';
 
 const TransactionsPage = () => {

@@ -1,4 +1,4 @@
-import OpeningBalance from '@/components/dashboard/setup/opening-balance/opening-balance';
+import OpeningBalance from '@/components/dashboard/trade-management/opening-balance/opening-balance';
 import React from 'react';
 
 const OpeningBalancePage = () => {
