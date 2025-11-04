@@ -1,4 +1,4 @@
-import Purchases from '@/components/dashboard/setup/purchases/purchases';
+import Purchases from '@/components/dashboard/trade-management/purchases/purchases';
 import React from 'react';
 
 const PurchasesPage = () => {

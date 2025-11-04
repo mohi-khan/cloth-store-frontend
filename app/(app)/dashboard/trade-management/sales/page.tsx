@@ -1,4 +1,4 @@
-import Sales from '@/components/dashboard/setup/sales/sales';
+import Sales from '@/components/dashboard/trade-management/sales/sales';
 import React from 'react';
 
 const SalesPage = () => {

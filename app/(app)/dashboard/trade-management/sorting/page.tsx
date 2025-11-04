@@ -1,4 +1,4 @@
-import Sortings from '@/components/dashboard/setup/sorting/sorting';
+import Sortings from '@/components/dashboard/trade-management/sorting/sorting';
 import React from 'react';
 
 const SortingPage = () => {

@@ -1,4 +1,4 @@
-import Expenses from '@/components/dashboard/setup/expenses/expenses';
+import Expenses from '@/components/dashboard/trade-management/expenses/expenses';
 import React from 'react';
 
 const ExpensesPage = () => {

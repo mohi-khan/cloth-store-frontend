@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
+  BriefcaseBusiness,
   ChevronDown,
   FileChartColumn,
   Home,
@@ -66,29 +67,36 @@ export function DashboardSidebar() {
           title: 'Account Heads',
           href: '/dashboard/setup/account-heads',
         },
+      ],
+    },
+    {
+      title: 'Trade Management',
+      icon: BriefcaseBusiness,
+      href: '/dashboard/trade-management',
+      subItems: [
         {
           title: 'Purchases',
-          href: '/dashboard/setup/purchases',
+          href: '/dashboard/trade-management/purchases',
         },
         {
           title: 'Sorting',
-          href: '/dashboard/setup/sorting',
+          href: '/dashboard/trade-management/sorting',
         },
         {
           title: 'Sales',
-          href: '/dashboard/setup/sales',
+          href: '/dashboard/trade-management/sales',
         },
         {
           title: 'Expenses',
-          href: '/dashboard/setup/expenses',
+          href: '/dashboard/trade-management/expenses',
         },
         {
           title: 'Transactions',
-          href: '/dashboard/setup/transactions',
+          href: '/dashboard/trade-management/transactions',
         },
         {
           title: 'Opening Balance',
-          href: '/dashboard/setup/opening-balance',
+          href: '/dashboard/trade-management/opening-balance',
         },
       ],
     },
