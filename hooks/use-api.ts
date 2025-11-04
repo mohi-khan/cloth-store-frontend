@@ -22,6 +22,7 @@ import {
   editVendor,
   getAllAccountHeads,
   getAllBankAccounts,
+  getAllCashInHand,
   getAllCustomerPaymentDetails,
   getAllCustomers,
   getAllExpenses,
@@ -34,6 +35,7 @@ import {
   getAllTransaction,
   getAllVendors,
   getAvailableItem,
+  getCashReport,
 } from '@/utils/api'
 import type {
   CreateAccountHeadType,
@@ -785,6 +787,23 @@ export const useGetCustomerPaymentDetails = () => {
   })
 }
 
+export const useGetCashInHand = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['cashInHand'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllCashInHand(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
 //transaction
 export const useGetTransactions = () => {
   const [token] = useAtom(tokenAtom)
@@ -879,4 +898,21 @@ export const useAddOpeningBalance = ({
   })
 
   return mutation
+}
+
+//reports
+export const useGetCashReport = (startDate: string, endDate: string) => {
+  const [token] = useAtom(tokenAtom)
+
+  return useQuery({
+    queryKey: ['cashReport', startDate, endDate],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getCashReport(startDate, endDate, token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
 }

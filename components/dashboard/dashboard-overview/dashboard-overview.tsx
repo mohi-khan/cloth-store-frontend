@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react'
 import {
   useGetInventoryItems,
   useGetCustomerPaymentDetails,
+  useGetCashInHand,
 } from '@/hooks/use-api'
 import { Popup } from '@/utils/popup'
 import {
@@ -56,17 +57,26 @@ const DashboardOverview = () => {
 
   const { data: InventoryItems } = useGetInventoryItems()
   console.log("🚀 ~ DashboardOverview ~ InventoryItems:", InventoryItems)
-  const { data: CustomerPaymentDetails } = useGetCustomerPaymentDetails()
-  console.log("🚀 ~ DashboardOverview ~ CustomerPaymentDetails:", CustomerPaymentDetails)
+  const { data: customerPaymentDetails } = useGetCustomerPaymentDetails()
+  console.log("🚀 ~ DashboardOverview ~ customerPaymentDetails:", customerPaymentDetails)
+  const { data: cashInHand } = useGetCashInHand()
+  console.log("🚀 ~ DashboardOverview ~ cashInHand:", cashInHand)
 
   const totalAmount = InventoryItems?.data?.reduce((sum: number, item: any) => {
     const qty = Math.max(item.totQty, 0)
     return sum + qty * item.price
   }, 0)
 
-  const totalUnpaidAmount = CustomerPaymentDetails?.data?.reduce(
+  const totalUnpaidAmount = customerPaymentDetails?.data?.reduce(
     (sum: number, item: any) => {
       return sum + (item.unpaid_amount || 0)
+    },
+    0
+  )
+
+  const totalCashInHand = cashInHand?.data?.reduce(
+    (sum: number, item: any) => {
+      return sum + (item.cashInHand || 0)
     },
     0
   )
@@ -150,8 +160,8 @@ const DashboardOverview = () => {
       onClick: () => openModal('customer-payment'),
     },
     {
-      title: 'Claim Value',
-      value: '120,000',
+      title: 'Cash In Hand',
+      value: totalCashInHand || 0,
       icon: Wallet,
       color: 'bg-red-500',
       trend: '+5.1%',
@@ -371,9 +381,9 @@ const DashboardOverview = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {CustomerPaymentDetails?.data &&
-                  CustomerPaymentDetails.data.length > 0 ? (
-                    CustomerPaymentDetails.data.map(
+                  {customerPaymentDetails?.data &&
+                  customerPaymentDetails.data.length > 0 ? (
+                    customerPaymentDetails.data.map(
                       (item: any, index: number) => (
                         <TableRow key={index}>
                           <TableCell className="font-medium">
@@ -416,8 +426,8 @@ const DashboardOverview = () => {
                 </TableBody>
               </Table>
             </div>
-            {CustomerPaymentDetails?.data &&
-              CustomerPaymentDetails.data.length > 0 && (
+            {customerPaymentDetails?.data &&
+              customerPaymentDetails.data.length > 0 && (
                 <div className="pt-4 border-t">
                   <div className="flex justify-end pr-4">
                     <div className="space-y-2">

@@ -27,6 +27,7 @@ import {
   GetCustomerPaymentDetailsType,
   GetOpeningBalanceType,
   CreateOpeningBalanceType,
+  GetCashReportType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -50,7 +51,7 @@ export async function getAllItems(token: string) {
 }
 
 export async function getAvailableItem(id: number, token: string) {
-  return fetchApi<{availableQuantity: number}>({
+  return fetchApi<{ availableQuantity: number }>({
     url: `api/item/available-item/${id}`,
     method: 'GET',
     headers: {
@@ -60,10 +61,7 @@ export async function getAvailableItem(id: number, token: string) {
   })
 }
 
-export async function createItem(
-  data: CreateItemType,
-  token: string
-) {
+export async function createItem(data: CreateItemType, token: string) {
   return fetchApi<CreateItemType>({
     url: 'api/item/create',
     method: 'POST',
@@ -128,10 +126,7 @@ export async function getAllVendors(token: string) {
   })
 }
 
-export async function createVendor(
-  data: CreateVendorType,
-  token: string
-) {
+export async function createVendor(data: CreateVendorType, token: string) {
   return fetchApi<CreateVendorType>({
     url: 'api/vendor/create',
     method: 'POST',
@@ -170,10 +165,7 @@ export async function getAllPurchases(token: string) {
   })
 }
 
-export async function createPurchase(
-  data: CreatePurchaseType,
-  token: string
-) {
+export async function createPurchase(data: CreatePurchaseType, token: string) {
   return fetchApi<CreatePurchaseType>({
     url: 'api/purchase/create',
     method: 'POST',
@@ -228,11 +220,7 @@ export async function editSorting(
   })
 }
 
-export async function deleteSorting(
-  id: number,
-  userId: number,
-  token: string
-) {
+export async function deleteSorting(id: number, userId: number, token: string) {
   return fetchApi<number>({
     url: `api/sorting/delete/${id}/${userId}`,
     method: 'DELETE',
@@ -254,10 +242,7 @@ export async function getAllCustomers(token: string) {
   })
 }
 
-export async function createCustomer(
-  data: CreateCustomerType,
-  token: string
-) {
+export async function createCustomer(data: CreateCustomerType, token: string) {
   return fetchApi<CreateCustomerType>({
     url: 'api/customer/create',
     method: 'POST',
@@ -296,10 +281,7 @@ export async function getAllSales(token: string) {
   })
 }
 
-export async function createSale(
-  data: CreateSalesType,
-  token: string
-) {
+export async function createSale(data: CreateSalesType, token: string) {
   return fetchApi<CreateSalesType>({
     url: 'api/sales/create',
     method: 'POST',
@@ -311,11 +293,7 @@ export async function createSale(
   })
 }
 
-export async function editSale(
-  id: number,
-  data: GetSalesType,
-  token: string
-) {
+export async function editSale(id: number, data: GetSalesType, token: string) {
   return fetchApi<GetSalesType>({
     url: `api/sales/edit`,
     method: 'PATCH',
@@ -380,10 +358,7 @@ export async function getAllExpenses(token: string) {
   })
 }
 
-export async function createExpense(
-  data: CreateExpenseType,
-  token: string
-) {
+export async function createExpense(data: CreateExpenseType, token: string) {
   return fetchApi<CreateExpenseType>({
     url: 'api/expense/create',
     method: 'POST',
@@ -409,6 +384,17 @@ export async function getAllInventoryItems(token: string) {
 export async function getAllCustomerPaymentDetails(token: string) {
   return fetchApi<GetCustomerPaymentDetailsType[]>({
     url: 'api/dashboard/remaining-amount',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllCashInHand(token: string) {
+  return fetchApi<{ cashInHand: number }[]>({
+    url: 'api/dashboard/cash-in-hand',
     method: 'GET',
     headers: {
       Authorization: token,
@@ -462,6 +448,17 @@ export async function createOpeningBalance(
     url: 'api/opening-balance/create',
     method: 'POST',
     body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getCashReport(startDate: string, endDate: string, token: string) {
+  return fetchApi<GetCashReportType[]>({
+    url: `api/report/cash-report?startDate=${startDate}&endDate=${endDate}`,
+    method: 'GET',
     headers: {
       Authorization: token,
       'Content-Type': 'application/json',
