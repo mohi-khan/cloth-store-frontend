@@ -339,6 +339,8 @@ export const cashReportSchema = z.object({
   vendor_id: z.number().nullable(),
   vendor_name: z.string().nullable(),
   transaction_date: z.string(), // ISO date string (e.g. "2025-11-02")
+  amount: z.number(),
+  opening_balance: z.number(),
 });
 export type GetCashReportType = z.infer<typeof cashReportSchema>;
 

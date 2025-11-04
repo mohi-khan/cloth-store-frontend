@@ -46,9 +46,9 @@ const CashReport = () => {
 
   const exportToExcel = () => {
     const flatData = sortedCashReports.map((report) => ({
+      'Opening Balance': report.opening_balance,
       'Transaction ID': report.transaction_id,
       'Transaction Type': report.transaction_type,
-      'Is Cash': report.is_cash ? 'Yes' : 'No',
       'Customer Name': report.customer_name || 'N/A',
       'Vendor Name': report.vendor_name || 'N/A',
       'Transaction Date': formatDate(new Date(report.transaction_date)),
@@ -56,11 +56,7 @@ const CashReport = () => {
 
     const worksheet = XLSX.utils.json_to_sheet(flatData)
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      `Cash Report`
-    )
+    XLSX.utils.book_append_sheet(workbook, worksheet, `Cash Report`)
 
     const excelBuffer = XLSX.write(workbook, {
       bookType: 'xlsx',
@@ -160,11 +156,7 @@ const CashReport = () => {
       pdf.setPage(i)
       pdf.setFontSize(12)
       pdf.setFont('bold')
-      pdf.text(
-        'Cloth Store Management System',
-        leftTextMargin,
-        35
-      )
+      pdf.text('Cloth Store Management System', leftTextMargin, 35)
 
       pdf.setFontSize(10)
       const baseText = `Cash Report from ${fromDate} to ${toDate} ( Date : `
@@ -271,6 +263,11 @@ const CashReport = () => {
           <Card className="shadow-md">
             <CardContent className="p-0">
               <div className="overflow-auto">
+                <div className="p-4 bg-amber-50 border-b">
+                  <h3 className="font-semibold text-amber-900">
+                    Opening Balance: {sortedCashReports[0].opening_balance}
+                  </h3>
+                </div>
                 <Table>
                   <TableHeader className="bg-amber-100 pdf-table-header">
                     <TableRow>
@@ -280,7 +277,7 @@ const CashReport = () => {
                       <TableHead className="font-bold">
                         Transaction Type
                       </TableHead>
-                      <TableHead className="font-bold">Is Cash</TableHead>
+                      <TableHead className="font-bold">Amount</TableHead>
                       <TableHead className="font-bold">Customer Name</TableHead>
                       <TableHead className="font-bold">Vendor Name</TableHead>
                       <TableHead className="font-bold">
@@ -297,7 +294,7 @@ const CashReport = () => {
                         <TableCell className="capitalize">
                           {report.transaction_type}
                         </TableCell>
-                        <TableCell>{report.is_cash ? 'Yes' : 'No'}</TableCell>
+                        <TableCell>{report.amount}</TableCell>
                         <TableCell>{report.customer_name || 'N/A'}</TableCell>
                         <TableCell>{report.vendor_name || 'N/A'}</TableCell>
                         <TableCell>
