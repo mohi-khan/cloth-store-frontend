@@ -27,6 +27,7 @@ import {
   GetCustomerPaymentDetailsType,
   GetOpeningBalanceType,
   CreateOpeningBalanceType,
+  GetCashReportType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -447,6 +448,17 @@ export async function createOpeningBalance(
     url: 'api/opening-balance/create',
     method: 'POST',
     body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getCashReport(startDate: string, endDate: string, token: string) {
+  return fetchApi<GetCashReportType[]>({
+    url: `api/report/cash-report?startDate=${startDate}&endDate=${endDate}`,
+    method: 'GET',
     headers: {
       Authorization: token,
       'Content-Type': 'application/json',

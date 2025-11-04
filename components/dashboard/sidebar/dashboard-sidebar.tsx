@@ -2,7 +2,15 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronDown, FileChartColumn, Home, NotebookText, Settings, SquarePlus, UserCog } from 'lucide-react'
+import {
+  ChevronDown,
+  FileChartColumn,
+  Home,
+  NotebookText,
+  Settings,
+  SquarePlus,
+  UserCog,
+} from 'lucide-react'
 
 import {
   Collapsible,
@@ -54,7 +62,7 @@ export function DashboardSidebar() {
           title: 'Customers',
           href: '/dashboard/setup/customers',
         },
-         {
+        {
           title: 'Account Heads',
           href: '/dashboard/setup/account-heads',
         },
@@ -85,60 +93,13 @@ export function DashboardSidebar() {
       ],
     },
     {
-      title: 'Policy',
-      icon: NotebookText,
-      href: '/dashboard/policy',
-      subItems: [
-        {
-          title: 'Travel Policy',
-          href: '/dashboard/policy/travel-policy',
-        },
-        {
-          title: 'Medical & Hospitalization',
-          href: '/dashboard/policy/medical-and-hospitalization',
-        },
-        {
-          title: 'Mobile Handset Policy',
-          href: '/dashboard/policy/mobile-handset-policy',
-        },
-      ],
-    },
-    // {
-    //   title: 'Claim',
-    //   icon: SquarePlus ,
-    //   href: '/dashboard/claim',
-    // },
-    {
-      title: 'Claims',
-      icon: SquarePlus,
-      href: '/dashboard/claims',
-      subItems: [
-        {
-          title: 'Travel Claim',
-          href: '/dashboard/claims/travel-claim',
-        },
-        {
-          title: 'Medical Claim',
-          href: '/dashboard/claims/medical-claim',
-        },
-        {
-          title: 'Mobile Handset Claim',
-          href: '/dashboard/claims/mobile-handset-claim',
-        },
-      ],
-    },
-    {
       title: 'Reports',
       icon: FileChartColumn,
       href: '/dashboard/report',
       subItems: [
         {
-          title: 'Birthday Report',
-          href: '/dashboard/report/birthday-report',
-        },
-        {
-          title: 'Claim Report',
-          href: '/dashboard/report/claim-report',
+          title: 'Cash Report',
+          href: '/dashboard/report/cash-report',
         },
       ],
     },
