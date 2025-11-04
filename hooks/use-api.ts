@@ -22,6 +22,7 @@ import {
   editVendor,
   getAllAccountHeads,
   getAllBankAccounts,
+  getAllCashInHand,
   getAllCustomerPaymentDetails,
   getAllCustomers,
   getAllExpenses,
@@ -779,6 +780,23 @@ export const useGetCustomerPaymentDetails = () => {
         throw new Error('Token not found')
       }
       return getAllCustomerPaymentDetails(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetCashInHand = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['cashInHand'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllCashInHand(token)
     },
     enabled: !!token,
     select: (data) => data,
