@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createAccountHead,
   createBankAccount,
-  createBankTransaction,
   createCustomer,
   createExpense,
   createItem,
@@ -24,7 +23,6 @@ import {
   editVendor,
   getAllAccountHeads,
   getAllBankAccounts,
-  getAllBankTransactions,
   getAllCashInHand,
   getAllCustomerPaymentDetails,
   getAllCustomers,
@@ -58,6 +56,7 @@ import type {
   GetCustomerType,
   GetSalesType,
   GetSortingType,
+  GetTransactionType,
   GetVendorType,
 } from '@/utils/type'
 import { toast } from './use-toast'
@@ -870,8 +869,8 @@ export const useEditTransaction = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: GetBankTransactionType }) => {
-      return editBankTransaction(id, data, token)
+    mutationFn: ({ createdAt, data }: { createdAt: string; data: GetTransactionType }) => {
+      return editBankTransaction(createdAt, data, token)
     },
     onSuccess: () => {
       toast({

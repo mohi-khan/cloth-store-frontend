@@ -51,6 +51,7 @@ const BankTransactions = () => {
   const bankTransactions = allTransactions?.data?.filter(
     (t) => t.transactionType === 'contra'
   )
+  console.log('🚀 ~ BankTransactions ~ bankTransactions:', bankTransactions)
 
   const { data: bankAccounts } = useGetBankAccounts()
 
@@ -63,12 +64,14 @@ const BankTransactions = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   const [isPopupOpen, setIsPopupOpen] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editingCreatedAt, setEditingCreatedAt] = useState<string | null>(null)
+  const [editingTransactions, setEditingTransactions] = useState<
+    GetTransactionType[]
+  >([])
 
-  // simplified local state for form
   const [formData, setFormData] = useState({
     type: 'deposit' as 'deposit' | 'withdraw',
-    date: new Date().toISOString().split('T')[0],
+    transactionDate: new Date().toISOString().split('T')[0],
     bankAccountId: 0,
     amount: 0,
   })
@@ -97,11 +100,12 @@ const BankTransactions = () => {
   const resetForm = () => {
     setFormData({
       type: 'deposit',
-      date: new Date().toISOString().split('T')[0],
+      transactionDate: new Date().toISOString().split('T')[0],
       bankAccountId: 0,
       amount: 0,
     })
-    setEditingId(null)
+    setEditingCreatedAt(null)
+    setEditingTransactions([])
     setIsPopupOpen(false)
     setError(null)
   }
@@ -167,22 +171,55 @@ const BankTransactions = () => {
     })
   }, [filteredTransactions, sortColumn, sortDirection])
 
+  const groupedByCreatedAt = useMemo(() => {
+    const groups: { [key: string]: GetTransactionType[] } = {}
+    sortedTransactions.forEach((t) => {
+      const createdAt = t.createdAt || 'unknown'
+      if (!groups[createdAt]) {
+        groups[createdAt] = []
+      }
+      groups[createdAt].push(t)
+    })
+    return groups
+  }, [sortedTransactions])
+
+  const displayTransactions = useMemo(() => {
+    const result: Array<
+      GetTransactionType & { showEditButton?: boolean; groupKey?: string }
+    > = []
+    Object.entries(groupedByCreatedAt).forEach(([createdAt, transactions]) => {
+      transactions.forEach((t, index) => {
+        result.push({
+          ...t,
+          showEditButton: index === 0,
+          groupKey: createdAt,
+        })
+      })
+    })
+    return result
+  }, [groupedByCreatedAt])
+
   const paginatedTransactions = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
-    return sortedTransactions.slice(startIndex, startIndex + itemsPerPage)
-  }, [sortedTransactions, currentPage, itemsPerPage])
+    return displayTransactions.slice(startIndex, startIndex + itemsPerPage)
+  }, [displayTransactions, currentPage, itemsPerPage])
 
-  const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage)
+  const totalPages = Math.ceil(displayTransactions.length / itemsPerPage)
 
   const handleEdit = (transaction: GetTransactionType) => {
+    const groupKey = transaction.createdAt || 'unknown'
+    const groupedTxns = groupedByCreatedAt[groupKey] || [transaction]
+    setEditingTransactions(groupedTxns)
+    setEditingCreatedAt(groupKey)
+
+    const firstTxn = groupedTxns[0]
     setFormData({
       type: 'deposit',
-      date:
-        transaction.transactionDate ?? new Date().toISOString().split('T')[0],
-      bankAccountId: transaction.bankId ?? 0,
-      amount: transaction.amount ?? 0,
+      transactionDate:
+        firstTxn.transactionDate ?? new Date().toISOString().split('T')[0],
+      bankAccountId: firstTxn.bankId ?? 0,
+      amount: Math.abs(firstTxn.amount ?? 0),
     })
-    setEditingId(transaction.transactionId ?? null)
     setIsPopupOpen(true)
   }
 
@@ -190,60 +227,83 @@ const BankTransactions = () => {
     e.preventDefault()
     setError(null)
 
-    if (!formData.type) return setError('Please select transaction type')
-    if (!formData.amount || formData.amount <= 0)
-      return setError('Please enter valid amount')
-    if (!formData.date) return setError('Please select date')
-    if (!formData.bankAccountId) return setError('Please select bank account')
+    if (editingCreatedAt) {
+      if (!formData.amount || formData.amount <= 0)
+        return setError('Please enter valid amount')
+      if (!formData.transactionDate) return setError('Please select date')
+      if (!formData.bankAccountId) return setError('Please select bank account')
 
-    try {
-      const baseData: Partial<CreateTransactionType> = {
-        transactionType: 'contra',
-        transactionDate: formData.date,
-        bankId: formData.bankAccountId,
-        createdBy: userData?.userId,
-        createdAt: new Date().toISOString(),
+      try {
+        const updatedTransactions = editingTransactions.map((txn, index) => ({
+          ...txn,
+          transactionDate: formData.transactionDate,
+          bankId: index === 0 ? formData.bankAccountId : txn.bankId,
+          amount: index === 0 ? formData.amount : -formData.amount,
+          updatedBy: userData?.userId,
+        //   updatedAt: new Date().toISOString(),
+        }))
+
+        await editMutation.mutateAsync({
+          createdAt: editingCreatedAt,
+          data: updatedTransactions,
+        })
+      } catch (err) {
+        console.error(err)
+        setError('Failed to save transaction')
       }
+    } else {
+      if (!formData.type) return setError('Please select transaction type')
+      if (!formData.amount || formData.amount <= 0)
+        return setError('Please enter valid amount')
+      if (!formData.transactionDate) return setError('Please select date')
+      if (!formData.bankAccountId) return setError('Please select bank account')
 
-      // create 2 entries for each operation
-      if (formData.type === 'deposit') {
-        // deposit => bank +, cash -
-        const bankTx: CreateTransactionType = {
-          ...baseData,
-          isCash: false,
-          amount: formData.amount,
-        } as CreateTransactionType
+      try {
+        const baseData: Partial<CreateTransactionType> = {
+          transactionType: 'contra',
+          transactionDate: formData.transactionDate,
+          bankId: formData.bankAccountId,
+          createdBy: userData?.userId,
+          createdAt: new Date().toISOString(),
+        }
 
-        const cashTx: CreateTransactionType = {
-          ...baseData,
-          isCash: true,
-          amount: -formData.amount,
-          bankId: null,
-        } as CreateTransactionType
+        if (formData.type === 'deposit') {
+          const bankTx: CreateTransactionType = {
+            ...baseData,
+            isCash: false,
+            amount: formData.amount,
+          } as CreateTransactionType
 
-        await addMutation.mutateAsync(bankTx)
-        await addMutation.mutateAsync(cashTx)
-      } else {
-        // withdraw => bank -, cash +
-        const bankTx: CreateTransactionType = {
-          ...baseData,
-          isCash: false,
-          amount: -formData.amount,
-        } as CreateTransactionType
+          const cashTx: CreateTransactionType = {
+            ...baseData,
+            isCash: true,
+            amount: -formData.amount,
+            bankId: null,
+          } as CreateTransactionType
 
-        const cashTx: CreateTransactionType = {
-          ...baseData,
-          isCash: true,
-          amount: formData.amount,
-          bankId: null,
-        } as CreateTransactionType
+          await addMutation.mutateAsync(bankTx)
+          await addMutation.mutateAsync(cashTx)
+        } else {
+          const bankTx: CreateTransactionType = {
+            ...baseData,
+            isCash: false,
+            amount: -formData.amount,
+          } as CreateTransactionType
 
-        await addMutation.mutateAsync(bankTx)
-        await addMutation.mutateAsync(cashTx)
+          const cashTx: CreateTransactionType = {
+            ...baseData,
+            isCash: true,
+            amount: formData.amount,
+            bankId: null,
+          } as CreateTransactionType
+
+          await addMutation.mutateAsync(bankTx)
+          await addMutation.mutateAsync(cashTx)
+        }
+      } catch (err) {
+        console.error(err)
+        setError('Failed to save transaction')
       }
-    } catch (err) {
-      console.error(err)
-      setError('Failed to save transaction')
     }
   }
 
@@ -254,7 +314,6 @@ const BankTransactions = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 mb-4">
           <div className="bg-amber-100 p-2 rounded-md">
@@ -284,7 +343,6 @@ const BankTransactions = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader className="bg-amber-100">
@@ -325,7 +383,7 @@ const BankTransactions = () => {
               </TableRow>
             ) : (
               paginatedTransactions.map((t) => (
-                <TableRow key={t.transactionId}>
+                <TableRow key={`${t.transactionId}-${t.createdAt}`}>
                   <TableCell>
                     {formatDate(
                       t.transactionDate ? new Date(t.transactionDate) : null
@@ -340,7 +398,7 @@ const BankTransactions = () => {
                     {t.amount?.toFixed(2)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    {t.showEditButton && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -348,7 +406,7 @@ const BankTransactions = () => {
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
-                    </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -357,8 +415,7 @@ const BankTransactions = () => {
         </Table>
       </div>
 
-      {/* Pagination */}
-      {sortedTransactions.length > 0 && (
+      {displayTransactions.length > 0 && (
         <div className="mt-4">
           <Pagination>
             <PaginationContent>
@@ -412,33 +469,32 @@ const BankTransactions = () => {
         </div>
       )}
 
-      {/* Popup Form */}
       <Popup
         isOpen={isPopupOpen}
         onClose={resetForm}
-        title={editingId ? 'Edit Transaction' : 'Add Transaction'}
+        title={editingCreatedAt ? 'Edit Transaction' : 'Add Transaction'}
         size="sm:max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-4">
-            {/* Type */}
-            <div className="space-y-2">
-              <Label htmlFor="type">Type*</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(v) => handleSelectChange('type', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="deposit">Deposit</SelectItem>
-                  <SelectItem value="withdraw">Withdraw</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {!editingCreatedAt && (
+              <div className="space-y-2">
+                <Label htmlFor="type">Type*</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(v) => handleSelectChange('type', v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="deposit">Deposit</SelectItem>
+                    <SelectItem value="withdraw">Withdraw</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            {/* Amount */}
             <div className="space-y-2">
               <Label htmlFor="amount">Amount*</Label>
               <Input
@@ -452,19 +508,17 @@ const BankTransactions = () => {
               />
             </div>
 
-            {/* Date */}
             <div className="space-y-2">
-              <Label htmlFor="date">Date*</Label>
+              <Label htmlFor="transactionDate">Transaction Date*</Label>
               <Input
-                id="date"
-                name="date"
+                id="transactionDate"
+                name="transactionDate"
                 type="date"
-                value={formData.date}
+                value={formData.transactionDate}
                 onChange={handleInputChange}
               />
             </div>
 
-            {/* Bank Account */}
             <div className="space-y-2">
               <Label htmlFor="bankAccountId">Bank Account*</Label>
               <CustomCombobox
