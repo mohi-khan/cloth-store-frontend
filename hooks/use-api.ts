@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createAccountHead,
   createBankAccount,
+  createBankTransaction,
   createCustomer,
   createExpense,
   createItem,
@@ -16,12 +17,14 @@ import {
   deleteSale,
   deleteSorting,
   editBankAccount,
+  editBankTransaction,
   editCustomer,
   editSale,
   editSorting,
   editVendor,
   getAllAccountHeads,
   getAllBankAccounts,
+  getAllBankTransactions,
   getAllCashInHand,
   getAllCustomerPaymentDetails,
   getAllCustomers,
@@ -40,6 +43,7 @@ import {
 import type {
   CreateAccountHeadType,
   CreateBankAccountType,
+  CreateBankTransactionType,
   CreateCustomerType,
   CreateExpenseType,
   CreateItemType,
@@ -50,6 +54,7 @@ import type {
   CreateTransactionType,
   CreateVendorType,
   GetBankAccountType,
+  GetBankTransactionType,
   GetCustomerType,
   GetSalesType,
   GetSortingType,
@@ -851,6 +856,89 @@ export const useAddTransaction = ({
 
   return mutation
 }
+
+export const useEditTransaction = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: GetBankTransactionType }) => {
+      return editBankTransaction(id, data, token)
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success!',
+        description: 'Bank account edited successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error editing bank account:', error)
+    },
+  })
+
+  return mutation
+}
+
+// export const useGetBankTransactions = () => {
+//   const [token] = useAtom(tokenAtom)
+//   useInitializeUser()
+
+//   return useQuery({
+//     queryKey: ['bankTransactions'],
+//     queryFn: () => {
+//       if (!token) {
+//         throw new Error('Token not found')
+//       }
+//       return getAllBankTransactions(token)
+//     },
+//     enabled: !!token,
+//     select: (data) => data,
+//   })
+// }
+
+// export const useAddBankTransaction = ({
+//   onClose,
+//   reset,
+// }: {
+//   onClose: () => void
+//   reset: () => void
+// }) => {
+//   useInitializeUser()
+//   const [token] = useAtom(tokenAtom)
+//   const queryClient = useQueryClient()
+
+//   const mutation = useMutation({
+//     mutationFn: (data: CreateBankTransactionType) => {
+//       return createBankTransaction(data, token)
+//     },
+//     onSuccess: (data) => {
+//       console.log('bank transaction added successfully:', data)
+
+//       queryClient.invalidateQueries({ queryKey: ['bankTransactions'] })
+//       reset()
+//       onClose()
+//     },
+//     onError: (error) => {
+//       console.error('Error adding bank transaction:', error)
+//     },
+//   })
+
+//   return mutation
+// }
+
+
 
 //opening-balance
 export const useGetOpeningBalances = () => {
