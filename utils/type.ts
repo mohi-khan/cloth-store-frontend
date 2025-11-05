@@ -331,16 +331,10 @@ export type CreateOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
 export type GetOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
 
 export const cashReportSchema = z.object({
-  transaction_id: z.number(),
-  transaction_type: z.enum(["payment", "recieved", "contra"]),
-  is_cash: z.number(),
-  customer_id: z.number().nullable(),
-  customer_name: z.string().nullable(),
-  vendor_id: z.number().nullable(),
-  vendor_name: z.string().nullable(),
-  transaction_date: z.string(), // ISO date string (e.g. "2025-11-02")
+  id: z.number(),
+  date: z.string(),
+  particular: z.string(),
   amount: z.number(),
-  opening_balance: z.number(),
 });
 export type GetCashReportType = z.infer<typeof cashReportSchema>;
 

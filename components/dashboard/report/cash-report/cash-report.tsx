@@ -29,32 +29,29 @@ const CashReport = () => {
 
   const { data: cashReports } = useGetCashReport(fromDate, toDate)
 
-  const sortedCashReports = useMemo(() => {
-    if (!cashReports?.data) return []
+  // const sortedCashReports = useMemo(() => {
+  //   if (!cashReports?.data) return []
 
-    return [...cashReports.data].sort((a, b) => {
-      if (!a.transaction_date && !b.transaction_date) return 0
-      if (!a.transaction_date) return 1
-      if (!b.transaction_date) return -1
+  //   return [...cashReports.data].sort((a, b) => {
+  //     if (!a.date && !b.date) return 0
+  //     if (!a.date) return 1
+  //     if (!b.date) return -1
 
-      return (
-        new Date(b.transaction_date).getTime() -
-        new Date(a.transaction_date).getTime()
-      )
-    })
-  }, [cashReports])
+  //     return (
+  //       new Date(b.date).getTime() -
+  //       new Date(a.date).getTime()
+  //     )
+  //   })
+  // }, [cashReports])
 
   const exportToExcel = () => {
-    const flatData = sortedCashReports.map((report) => ({
-      'Opening Balance': report.opening_balance,
-      'Transaction ID': report.transaction_id,
-      'Transaction Type': report.transaction_type,
-      'Customer Name': report.customer_name || 'N/A',
-      'Vendor Name': report.vendor_name || 'N/A',
-      'Transaction Date': formatDate(new Date(report.transaction_date)),
+    const flatData = cashReports?.data?.map((report) => ({
+      'Date': formatDate(new Date(report.date)),
+      'Particular': report.particular || 'N/A',
+      'Amount': report.amount,
     }))
 
-    const worksheet = XLSX.utils.json_to_sheet(flatData)
+    const worksheet = XLSX.utils.json_to_sheet(flatData as any[])
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, `Cash Report`)
 
@@ -194,7 +191,7 @@ const CashReport = () => {
             onClick={exportToExcel}
             variant="ghost"
             className="flex items-center gap-2 bg-green-100 text-green-900 hover:bg-green-200"
-            disabled={sortedCashReports.length === 0}
+            disabled={cashReports?.data?.length === 0}
           >
             <FileSpreadsheet className="h-4 w-4" />
             Excel
@@ -204,7 +201,7 @@ const CashReport = () => {
             variant="outline"
             size="sm"
             className="flex items-center gap-2 bg-purple-50 text-purple-700 hover:bg-purple-100 print:hidden"
-            disabled={sortedCashReports.length === 0}
+            disabled={cashReports?.data?.length === 0}
           >
             <File className="h-4 w-4" />
             PDF
@@ -248,7 +245,7 @@ const CashReport = () => {
               <p>Loading cash reports...</p>
             </CardContent>
           </Card>
-        ) : sortedCashReports.length === 0 ? (
+        ) : cashReports?.data?.length === 0 ? (
           <Card className="shadow-md">
             <CardContent className="p-8 text-center text-gray-500">
               No cash transactions found for the selected date range
@@ -263,43 +260,26 @@ const CashReport = () => {
           <Card className="shadow-md">
             <CardContent className="p-0">
               <div className="overflow-auto">
-                <div className="p-4 bg-amber-50 border-b">
-                  <h3 className="font-semibold text-amber-900">
-                    Opening Balance: {sortedCashReports[0].opening_balance}
-                  </h3>
-                </div>
                 <Table>
                   <TableHeader className="bg-amber-100 pdf-table-header">
                     <TableRow>
                       <TableHead className="font-bold">
-                        Transaction ID
+                        Date
                       </TableHead>
                       <TableHead className="font-bold">
-                        Transaction Type
+                        Particular
                       </TableHead>
                       <TableHead className="font-bold">Amount</TableHead>
-                      <TableHead className="font-bold">Customer Name</TableHead>
-                      <TableHead className="font-bold">Vendor Name</TableHead>
-                      <TableHead className="font-bold">
-                        Transaction Date
-                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedCashReports.map((report) => (
-                      <TableRow key={report.transaction_id}>
-                        <TableCell className="font-medium">
-                          {report.transaction_id}
-                        </TableCell>
-                        <TableCell className="capitalize">
-                          {report.transaction_type}
-                        </TableCell>
-                        <TableCell>{report.amount}</TableCell>
-                        <TableCell>{report.customer_name || 'N/A'}</TableCell>
-                        <TableCell>{report.vendor_name || 'N/A'}</TableCell>
+                    {cashReports?.data?.map((report) => (
+                      <TableRow key={report.id}>
                         <TableCell>
-                          {formatDate(new Date(report.transaction_date))}
+                          {formatDate(new Date(report.date))}
                         </TableCell>
+                        <TableCell>{report.particular}</TableCell>
+                        <TableCell>{report.amount}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
