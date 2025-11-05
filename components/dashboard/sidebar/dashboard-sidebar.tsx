@@ -95,6 +95,10 @@ export function DashboardSidebar() {
           href: '/dashboard/trade-management/transactions',
         },
         {
+          title: 'Bank Transactions',
+          href: '/dashboard/trade-management/bank-transactions',
+        },
+        {
           title: 'Opening Balance',
           href: '/dashboard/trade-management/opening-balance',
         },

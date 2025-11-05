@@ -64,6 +64,10 @@ const OpeningBalance = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [searchTerm, setSearchTerm] = useState('')
 
+  const hasNonPartyBalance = useMemo(() => {
+    return openingBalances?.data?.some((b) => b.isParty === false) ?? false
+  }, [openingBalances])
+
   useEffect(() => {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
@@ -83,7 +87,7 @@ const OpeningBalance = () => {
 
   const [formData, setFormData] = useState<CreateOpeningBalanceType>({
     openingAmount: 0,
-    isParty: false,
+    isParty: hasNonPartyBalance ? true : false,
     customerId: null,
     type: 'debit',
     createdBy: userData?.userId || 0,
@@ -115,7 +119,7 @@ const OpeningBalance = () => {
   const resetForm = () => {
     setFormData({
       openingAmount: 0,
-      isParty: false,
+      isParty: hasNonPartyBalance ? true : false,
       customerId: null,
       type: 'debit',
       createdBy: userData?.userId || 0,
@@ -130,6 +134,15 @@ const OpeningBalance = () => {
     setIsPopupOpen(false)
     setError(null)
   }, [])
+
+  useEffect(() => {
+    if (isPopupOpen) {
+      setFormData((prev) => ({
+        ...prev,
+        isParty: hasNonPartyBalance ? true : false,
+      }))
+    }
+  }, [hasNonPartyBalance, isPopupOpen])
 
   const mutation = useAddOpeningBalance({
     onClose: closePopup,
@@ -185,6 +198,13 @@ const OpeningBalance = () => {
     e.preventDefault()
     setError(null)
 
+    if (hasNonPartyBalance && formData.isParty === false) {
+      setError(
+        "You can't select 'No' since a non-party balance already exists."
+      )
+      return
+    }
+
     try {
       mutation.mutate(formData)
     } catch (err) {
@@ -238,7 +258,6 @@ const OpeningBalance = () => {
           <Button
             className="bg-amber-400 hover:bg-amber-500 text-black"
             onClick={() => setIsPopupOpen(true)}
-            disabled={openingBalances?.data?.length !== 0}
           >
             Add
           </Button>
@@ -407,7 +426,9 @@ const OpeningBalance = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="true">Yes</SelectItem>
-                  <SelectItem value="false">No</SelectItem>
+                  <SelectItem disabled={hasNonPartyBalance} value="false">
+                    No
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

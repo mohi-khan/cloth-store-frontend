@@ -310,8 +310,10 @@ export const transactionSchema = z.object({
 export type CreateTransactionType = z.infer<typeof transactionSchema>
 export type GetTransactionType = z.infer<typeof transactionSchema> & {
   bankName: string | null
+  branch: string | null
   bankAccount: string | null
   bankAccountName: string | null
+  accountNumber: string | null
   customerName: string | null
   vendorName: string | null
 }
@@ -337,6 +339,20 @@ export const cashReportSchema = z.object({
   amount: z.number(),
 });
 export type GetCashReportType = z.infer<typeof cashReportSchema>;
+
+export const bankTransactionSchema = z.object({
+  id: z.number().optional(),
+  type: z.enum(['deposit', 'withdraw']),
+  date: z.string(),
+  bankAccountId: z.number(),
+  amount: z.number(),
+})
+export type CreateBankTransactionType = z.infer<typeof bankTransactionSchema>;
+export type GetBankTransactionType = z.infer<typeof bankTransactionSchema> & {
+  bankName: string | null
+  branch: string | null
+  accountNumber: string | null
+};
 
 export interface User {
   userId: number

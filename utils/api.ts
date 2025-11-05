@@ -28,6 +28,8 @@ import {
   GetOpeningBalanceType,
   CreateOpeningBalanceType,
   GetCashReportType,
+  GetBankTransactionType,
+  CreateBankTransactionType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -424,6 +426,48 @@ export async function createTransaction(
     body: data,
     headers: {
       Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllBankTransactions(token: string) {
+  return fetchApi<GetBankTransactionType[]>({
+    url: 'api/bank-transaction/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createBankTransaction(
+  data: CreateBankTransactionType,
+  token: string
+) {
+  return fetchApi<CreateBankTransactionType>({
+    url: 'api/bank-transaction/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function editBankTransaction(
+  id: number,
+  data: GetBankTransactionType,
+  token: string
+) {
+  return fetchApi<GetBankTransactionType>({
+    url: `api/bank-transaction/edit/${id}`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })
