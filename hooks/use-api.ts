@@ -37,6 +37,7 @@ import {
   getAllVendors,
   getAvailableItem,
   getCashReport,
+  getPartyReport,
 } from '@/utils/api'
 import type {
   CreateAccountHeadType,
@@ -435,7 +436,7 @@ export const useDeleteSorting = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: ({ id, userId }: { id: number, userId: number }) => {
+    mutationFn: ({ id, userId }: { id: number; userId: number }) => {
       return deleteSorting(id, userId, token)
     },
     onSuccess: () => {
@@ -455,7 +456,6 @@ export const useDeleteSorting = ({
 
   return mutation
 }
-
 
 //customer
 export const useGetCustomers = () => {
@@ -639,7 +639,15 @@ export const useDeleteSale = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: ({ saleMasterId, saleDetailsId, userId }: { saleMasterId: number, saleDetailsId: number, userId: number }) => {
+    mutationFn: ({
+      saleMasterId,
+      saleDetailsId,
+      userId,
+    }: {
+      saleMasterId: number
+      saleDetailsId: number
+      userId: number
+    }) => {
       return deleteSale(saleMasterId, saleDetailsId, userId, token)
     },
     onSuccess: () => {
@@ -869,7 +877,13 @@ export const useEditTransaction = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: ({ createdAt, data }: { createdAt: string; data: GetTransactionType }) => {
+    mutationFn: ({
+      createdAt,
+      data,
+    }: {
+      createdAt: string
+      data: GetTransactionType
+    }) => {
       return editBankTransaction(createdAt, data, token)
     },
     onSuccess: () => {
@@ -937,8 +951,6 @@ export const useEditTransaction = ({
 //   return mutation
 // }
 
-
-
 //opening-balance
 export const useGetOpeningBalances = () => {
   const [token] = useAtom(tokenAtom)
@@ -998,6 +1010,26 @@ export const useGetCashReport = (startDate: string, endDate: string) => {
         throw new Error('Token not found')
       }
       return getCashReport(startDate, endDate, token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetPartyReport = (
+  startDate: string,
+  endDate: string,
+  partyId: number
+) => {
+  const [token] = useAtom(tokenAtom)
+
+  return useQuery({
+    queryKey: ['partyReport', startDate, endDate, partyId],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getPartyReport(startDate, endDate, partyId, token)
     },
     enabled: !!token,
     select: (data) => data,

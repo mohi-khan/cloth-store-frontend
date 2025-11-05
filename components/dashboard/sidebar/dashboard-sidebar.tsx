@@ -113,6 +113,10 @@ export function DashboardSidebar() {
           title: 'Cash Report',
           href: '/dashboard/report/cash-report',
         },
+        {
+          title: 'Party Report',
+          href: '/dashboard/report/party-report',
+        },
       ],
     },
   ]

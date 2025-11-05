@@ -30,6 +30,7 @@ import {
   GetCashReportType,
   GetBankTransactionType,
   CreateBankTransactionType,
+  GetPartyReportType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -432,7 +433,7 @@ export async function createTransaction(
 }
 
 export async function editBankTransaction(
-  createdAt : string,
+  createdAt: string,
   data: GetTransactionType,
   token: string
 ) {
@@ -473,9 +474,29 @@ export async function createOpeningBalance(
   })
 }
 
-export async function getCashReport(startDate: string, endDate: string, token: string) {
+export async function getCashReport(
+  startDate: string,
+  endDate: string,
+  token: string
+) {
   return fetchApi<GetCashReportType[]>({
     url: `api/report/cash-report?startDate=${startDate}&endDate=${endDate}`,
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getPartyReport(
+  startDate: string,
+  endDate: string,
+  partyId: number,
+  token: string
+) {
+  return fetchApi<GetPartyReportType[]>({
+    url: `api/report/party-report?startDate=${startDate}&endDate=${endDate}&partyId=${partyId}`,
     method: 'GET',
     headers: {
       Authorization: token,

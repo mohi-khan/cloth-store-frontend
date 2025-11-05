@@ -340,6 +340,14 @@ export const cashReportSchema = z.object({
 });
 export type GetCashReportType = z.infer<typeof cashReportSchema>;
 
+export const partyReportSchema = z.object({
+  id: z.number(),
+  date: z.string(),
+  particular: z.string(),
+  amount: z.number(),
+});
+export type GetPartyReportType = z.infer<typeof partyReportSchema>;
+
 export const bankTransactionSchema = z.object({
   id: z.number().optional(),
   type: z.enum(['deposit', 'withdraw']),
