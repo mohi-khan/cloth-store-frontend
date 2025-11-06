@@ -434,7 +434,7 @@ export async function createTransaction(
 
 export async function editBankTransaction(
   createdAt: string,
-  data: GetTransactionType,
+  data: GetTransactionType[],
   token: string
 ) {
   return fetchApi<GetTransactionType[]>({

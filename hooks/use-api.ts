@@ -882,7 +882,7 @@ export const useEditTransaction = ({
       data,
     }: {
       createdAt: string
-      data: GetTransactionType
+      data: GetTransactionType[] // <-- change this
     }) => {
       return editBankTransaction(createdAt, data, token)
     },
