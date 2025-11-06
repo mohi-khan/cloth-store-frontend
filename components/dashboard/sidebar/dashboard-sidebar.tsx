@@ -117,6 +117,10 @@ export function DashboardSidebar() {
           title: 'Party Report',
           href: '/dashboard/report/party-report',
         },
+        {
+          title: 'Stock Ledger',
+          href: '/dashboard/report/stock-ledger',
+        },
       ],
     },
   ]

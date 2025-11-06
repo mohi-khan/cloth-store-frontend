@@ -38,6 +38,7 @@ import {
   getAvailableItem,
   getCashReport,
   getPartyReport,
+  getStockLedger,
 } from '@/utils/api'
 import type {
   CreateAccountHeadType,
@@ -1030,6 +1031,26 @@ export const useGetPartyReport = (
         throw new Error('Token not found')
       }
       return getPartyReport(startDate, endDate, partyId, token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetStockLedger = (
+  startDate: string,
+  endDate: string,
+  itemId: number
+) => {
+  const [token] = useAtom(tokenAtom)
+
+  return useQuery({
+    queryKey: ['stockLedger', startDate, endDate, itemId],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getStockLedger(startDate, endDate, itemId, token)
     },
     enabled: !!token,
     select: (data) => data,
