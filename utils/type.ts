@@ -348,6 +348,18 @@ export const partyReportSchema = z.object({
 });
 export type GetPartyReportType = z.infer<typeof partyReportSchema>;
 
+export const stockLedgerSchema = z.object({
+  id: z.number(),
+  item_id: z.number(),
+  item_name: z.string(),
+  reference_type: z.string(), // could also refine to literal types if you want
+  reference: z.string().nullable(),
+  quantity: z.number(),
+  transaction_date: z.string().nullable(),
+  balance: z.number(),
+});
+export type GetStockLedgerType = z.infer<typeof stockLedgerSchema>;
+
 export const bankTransactionSchema = z.object({
   id: z.number().optional(),
   type: z.enum(['deposit', 'withdraw']),

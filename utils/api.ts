@@ -31,6 +31,7 @@ import {
   GetBankTransactionType,
   CreateBankTransactionType,
   GetPartyReportType,
+  GetStockLedgerType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -434,7 +435,7 @@ export async function createTransaction(
 
 export async function editBankTransaction(
   createdAt: string,
-  data: GetTransactionType,
+  data: GetTransactionType[],
   token: string
 ) {
   return fetchApi<GetTransactionType[]>({
@@ -497,6 +498,22 @@ export async function getPartyReport(
 ) {
   return fetchApi<GetPartyReportType[]>({
     url: `api/report/party-report?startDate=${startDate}&endDate=${endDate}&partyId=${partyId}`,
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getStockLedger(
+  startDate: string,
+  endDate: string,
+  itemId: number,
+  token: string
+) {
+  return fetchApi<GetStockLedgerType[]>({
+    url: `api/report/stock-ledger?startDate=${startDate}&endDate=${endDate}&itemId=${itemId}`,
     method: 'GET',
     headers: {
       Authorization: token,

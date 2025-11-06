@@ -191,7 +191,7 @@ const BankTransactions = () => {
       transactions.forEach((t, index) => {
         result.push({
           ...t,
-          showEditButton: index === 0,
+          showEditButton: t.bankId !== null,
           groupKey: createdAt,
         })
       })
@@ -215,8 +215,9 @@ const BankTransactions = () => {
     const firstTxn = groupedTxns[0]
     setFormData({
       type: 'deposit',
-      transactionDate:
-        firstTxn.transactionDate ?? new Date().toISOString().split('T')[0],
+      transactionDate: firstTxn.transactionDate
+        ? new Date(firstTxn.transactionDate).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0],
       bankAccountId: firstTxn.bankId ?? 0,
       amount: Math.abs(firstTxn.amount ?? 0),
     })
@@ -239,8 +240,7 @@ const BankTransactions = () => {
           transactionDate: formData.transactionDate,
           bankId: index === 0 ? formData.bankAccountId : txn.bankId,
           amount: index === 0 ? formData.amount : -formData.amount,
-          updatedBy: userData?.userId,
-        //   updatedAt: new Date().toISOString(),
+          updatedBy: userData?.userId ?? null, // <-- here
         }))
 
         await editMutation.mutateAsync({
