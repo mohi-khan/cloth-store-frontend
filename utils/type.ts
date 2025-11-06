@@ -349,7 +349,7 @@ export const partyReportSchema = z.object({
 export type GetPartyReportType = z.infer<typeof partyReportSchema>;
 
 export const stockLedgerSchema = z.object({
-  transaction_id: z.number(),
+  id: z.number(),
   item_id: z.number(),
   item_name: z.string(),
   reference_type: z.string(), // could also refine to literal types if you want

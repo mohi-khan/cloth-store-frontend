@@ -304,7 +304,7 @@ const StockLedger = () => {
                   </TableHeader>
                   <TableBody>
                     {stockLedgerData?.data?.map((ledger) => (
-                      <TableRow key={ledger.transaction_id}>
+                      <TableRow key={ledger.id} className={`${ledger.reference_type === 'Opening Stock' || ledger.reference_type === 'Closing Stock' ? 'bg-yellow-200': ''}`}>
                         <TableCell>
                           {ledger.transaction_date
                             ? formatDate(new Date(ledger.transaction_date))
