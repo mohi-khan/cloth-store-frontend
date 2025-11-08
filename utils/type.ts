@@ -374,6 +374,17 @@ export type GetBankTransactionType = z.infer<typeof bankTransactionSchema> & {
   accountNumber: string | null
 };
 
+export const profitSummarySchema = z.array(
+  z.object({
+    id: z.number().int(),
+    month: z.string(),
+    number_of_sales: z.number().int(),
+    total_sales_amount: z.number(),
+    net_profit: z.number(),
+  })
+);
+export type GetProfitSummary = z.infer<typeof profitSummarySchema>
+
 export interface User {
   userId: number
   username: string

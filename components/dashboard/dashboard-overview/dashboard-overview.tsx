@@ -11,7 +11,16 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -20,6 +29,7 @@ import {
   useGetInventoryItems,
   useGetCustomerPaymentDetails,
   useGetCashInHand,
+  useGetProfitSummary,
 } from '@/hooks/use-api'
 import { Popup } from '@/utils/popup'
 import {
@@ -41,13 +51,7 @@ const DashboardOverview = () => {
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean
-    type:
-      | 'inventory'
-      | 'customer-payment'
-      | 'claim-month'
-      | 'claim-value'
-      | 'purchases'
-      | null
+    type: 'inventory' | 'customer-payment' | 'claim-month' | 'purchases' | null
     title: string
   }>({
     isOpen: false,
@@ -56,11 +60,16 @@ const DashboardOverview = () => {
   })
 
   const { data: InventoryItems } = useGetInventoryItems()
-  console.log("🚀 ~ DashboardOverview ~ InventoryItems:", InventoryItems)
+  console.log('🚀 ~ DashboardOverview ~ InventoryItems:', InventoryItems)
   const { data: customerPaymentDetails } = useGetCustomerPaymentDetails()
-  console.log("🚀 ~ DashboardOverview ~ customerPaymentDetails:", customerPaymentDetails)
+  console.log(
+    '🚀 ~ DashboardOverview ~ customerPaymentDetails:',
+    customerPaymentDetails
+  )
   const { data: cashInHand } = useGetCashInHand()
-  console.log("🚀 ~ DashboardOverview ~ cashInHand:", cashInHand)
+  console.log('🚀 ~ DashboardOverview ~ cashInHand:', cashInHand)
+  const { data: profitSummary } = useGetProfitSummary()
+  console.log('🚀 ~ DashboardOverview ~ profitSummary:', profitSummary)
 
   const totalAmount = InventoryItems?.data?.reduce((sum: number, item: any) => {
     const qty = Math.max(item.totQty, 0)
@@ -74,12 +83,9 @@ const DashboardOverview = () => {
     0
   )
 
-  const totalCashInHand = cashInHand?.data?.reduce(
-    (sum: number, item: any) => {
-      return sum + (item.cashInHand || 0)
-    },
-    0
-  )
+  const totalCashInHand = cashInHand?.data?.reduce((sum: number, item: any) => {
+    return sum + (item.cashInHand || 0)
+  }, 0)
 
   useEffect(() => {
     const checkUserData = () => {
@@ -103,11 +109,6 @@ const DashboardOverview = () => {
       { description: 'Claim 002', amount: 8500 },
       { description: 'Claim 003', amount: 12000 },
     ],
-    'claim-value': [
-      { category: 'Equipment', value: 45000 },
-      { category: 'Maintenance', value: 35000 },
-      { category: 'Other', value: 40000 },
-    ],
     purchases: [
       { itemName: 'Office Supplies', quantity: 150, totalAmount: 45000 },
       { itemName: 'Equipment', quantity: 25, totalAmount: 75000 },
@@ -115,18 +116,12 @@ const DashboardOverview = () => {
   }
 
   const openModal = (
-    type:
-      | 'inventory'
-      | 'customer-payment'
-      | 'claim-month'
-      | 'claim-value'
-      | 'purchases'
+    type: 'inventory' | 'customer-payment' | 'claim-month' | 'purchases'
   ) => {
     const titles = {
       inventory: 'Total Inventory Items',
       'customer-payment': 'Customer Payment Details',
       'claim-month': "This Month's Claims",
-      'claim-value': 'Claim Value Details',
       purchases: 'Fiscal Year Purchases',
     }
     setModalState({
@@ -166,7 +161,7 @@ const DashboardOverview = () => {
       color: 'bg-red-500',
       trend: '+5.1%',
       trendUp: true,
-      onClick: () => openModal('claim-value'),
+      onClick: undefined,
     },
     {
       title: 'Fiscal Year Purchases',
@@ -476,33 +471,6 @@ const DashboardOverview = () => {
           </div>
         )
 
-      case 'claim-value':
-        return (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {staticModalData['claim-value'].map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.category}</TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {item.value.toLocaleString('th-TH', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )
-
       case 'purchases':
         return (
           <div className="overflow-x-auto">
@@ -579,7 +547,7 @@ const DashboardOverview = () => {
         {metrics.map((metric, index) => (
           <Card
             key={index}
-            className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+            className={`hover:shadow-lg transition-shadow duration-200 ${metric.onClick ? 'cursor-pointer' : ''}`}
             onClick={metric.onClick}
           >
             <CardContent className="p-6">
@@ -623,63 +591,84 @@ const DashboardOverview = () => {
 
       {/* Charts and Calendar Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Claim Value by Category */}
         <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-yellow-600" />
-              Claim Value by Category
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              Profit Summary
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col lg:flex-row items-center gap-6">
-              <div className="h-64 w-64 flex-shrink-0">
+            <div className="w-full h-80">
+              {profitSummary?.data && profitSummary.data.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex-1 space-y-3">
-                {pieData.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  <LineChart
+                    data={profitSummary.data}
+                    margin={{ top: 5, right: 30, left: 0, bottom: 50 }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></div>
-                      <span className="font-medium text-gray-700">
-                        {item.name}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-gray-900">
-                        {item.value.toLocaleString()}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {item.percentage}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    <CartesianGrid
+                      strokeDasharray="0"
+                      stroke="#e5e7eb"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="month"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      formatter={(value: number) =>
+                        value.toLocaleString('th-TH', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      }
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      }}
+                      cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
+                    />
+                    <Legend
+                      wrapperStyle={{ paddingTop: '20px' }}
+                      iconType="line"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="total_sales_amount"
+                      stroke="#1e40af"
+                      name="Total Sales"
+                      strokeWidth={2.5}
+                      dot={{ fill: '#1e40af', r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
+                      isAnimationActive={true}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="net_profit"
+                      stroke="#059669"
+                      name="Net Profit"
+                      strokeWidth={2.5}
+                      dot={{ fill: '#059669', r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
+                      isAnimationActive={true}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No profit data available
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -741,12 +730,5 @@ const DashboardOverview = () => {
     </div>
   )
 }
-
-const pieData = [
-  { name: 'Equipment', value: 95000, percentage: 79.2, color: '#059669' },
-  { name: 'Furniture', value: 15000, percentage: 12.5, color: '#0891b2' },
-  { name: 'Technology', value: 8000, percentage: 6.7, color: '#7c3aed' },
-  { name: 'Other', value: 2000, percentage: 1.6, color: '#e5e7eb' },
-]
 
 export default DashboardOverview

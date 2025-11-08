@@ -27,7 +27,7 @@ export default function RootLayout({
           <SidebarProvider>
             <DashboardSidebar />
             <SidebarInset>
-              <main className="flex-1 p-6">{children}</main>
+              <main className="p-6">{children}</main>
               <Toaster />
             </SidebarInset>
           </SidebarProvider>
