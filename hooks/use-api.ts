@@ -38,6 +38,7 @@ import {
   getAvailableItem,
   getCashReport,
   getPartyReport,
+  getProfitSummary,
   getStockLedger,
 } from '@/utils/api'
 import type {
@@ -783,6 +784,23 @@ export const useGetInventoryItems = () => {
   })
 }
 
+export const useGetProfitSummary = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['profitSummary'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getProfitSummary(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
 export const useGetCustomerPaymentDetails = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
@@ -904,53 +922,6 @@ export const useEditTransaction = ({
 
   return mutation
 }
-
-// export const useGetBankTransactions = () => {
-//   const [token] = useAtom(tokenAtom)
-//   useInitializeUser()
-
-//   return useQuery({
-//     queryKey: ['bankTransactions'],
-//     queryFn: () => {
-//       if (!token) {
-//         throw new Error('Token not found')
-//       }
-//       return getAllBankTransactions(token)
-//     },
-//     enabled: !!token,
-//     select: (data) => data,
-//   })
-// }
-
-// export const useAddBankTransaction = ({
-//   onClose,
-//   reset,
-// }: {
-//   onClose: () => void
-//   reset: () => void
-// }) => {
-//   useInitializeUser()
-//   const [token] = useAtom(tokenAtom)
-//   const queryClient = useQueryClient()
-
-//   const mutation = useMutation({
-//     mutationFn: (data: CreateBankTransactionType) => {
-//       return createBankTransaction(data, token)
-//     },
-//     onSuccess: (data) => {
-//       console.log('bank transaction added successfully:', data)
-
-//       queryClient.invalidateQueries({ queryKey: ['bankTransactions'] })
-//       reset()
-//       onClose()
-//     },
-//     onError: (error) => {
-//       console.error('Error adding bank transaction:', error)
-//     },
-//   })
-
-//   return mutation
-// }
 
 //opening-balance
 export const useGetOpeningBalances = () => {

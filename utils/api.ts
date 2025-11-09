@@ -32,6 +32,7 @@ import {
   CreateBankTransactionType,
   GetPartyReportType,
   GetStockLedgerType,
+  GetProfitSummary,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -399,6 +400,17 @@ export async function getAllCustomerPaymentDetails(token: string) {
 export async function getAllCashInHand(token: string) {
   return fetchApi<{ cashInHand: number }[]>({
     url: 'api/dashboard/cash-in-hand',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getProfitSummary(token: string) {
+  return fetchApi<GetProfitSummary[]>({
+    url: 'api/dashboard/profit-summary',
     method: 'GET',
     headers: {
       Authorization: token,
