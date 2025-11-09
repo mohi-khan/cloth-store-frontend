@@ -326,6 +326,7 @@ export const OpeningBalanceSchema = z.object({
   openingAmount: z.number(),
   isParty: z.boolean(),
   customerId: z.number().nullable(),
+  bankAccountId: z.number().nullable(),
   type: z.enum(['debit', 'credit']),
   createdBy: z.number(),
   createdAt: z.string(),

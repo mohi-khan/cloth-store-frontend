@@ -33,6 +33,7 @@ import { useRouter } from 'next/navigation'
 import formatDate from '@/utils/formatDate'
 import {
   useAddOpeningBalance,
+  useGetBankAccounts,
   useGetCustomers,
   useGetOpeningBalances,
 } from '@/hooks/use-api'
@@ -51,6 +52,7 @@ const OpeningBalance = () => {
   const [token] = useAtom(tokenAtom)
 
   const { data: openingBalances } = useGetOpeningBalances()
+  const { data: bankAccounts } = useGetBankAccounts()
   const { data: customers } = useGetCustomers()
 
   const router = useRouter()
@@ -89,6 +91,7 @@ const OpeningBalance = () => {
     openingAmount: 0,
     isParty: hasNonPartyBalance ? true : false,
     customerId: null,
+    bankAccountId: null,
     type: 'debit',
     createdBy: userData?.userId || 0,
     createdAt: new Date().toISOString(),
@@ -121,6 +124,7 @@ const OpeningBalance = () => {
       openingAmount: 0,
       isParty: hasNonPartyBalance ? true : false,
       customerId: null,
+      bankAccountId: null,
       type: 'debit',
       createdBy: userData?.userId || 0,
       createdAt: new Date().toISOString(),
@@ -381,7 +385,7 @@ const OpeningBalance = () => {
         isOpen={isPopupOpen}
         onClose={resetForm}
         title="Add Opening Balance"
-        size="sm:max-w-md"
+        size="sm:max-w-xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
@@ -431,6 +435,33 @@ const OpeningBalance = () => {
                   </SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="customerId">Bank Account*</Label>
+              <CustomCombobox
+                items={
+                  bankAccounts?.data?.map((b) => ({
+                    id: b.bankAccountId?.toString() || '0',
+                    name: `${b.bankName} - ${b.accountNumber} - ${b.branch}`,
+                  })) || []
+                }
+                value={
+                  formData.bankAccountId
+                    ? {
+                        id: formData.bankAccountId.toString(),
+                        name:
+                          bankAccounts?.data?.find(
+                            (b) => b.bankAccountId === formData.bankAccountId
+                          )?.bankName || '',
+                      }
+                    : null
+                }
+                onChange={(v) =>
+                  handleSelectChange('bankAccountId', v ? v.id : '0')
+                }
+                placeholder="Select bank account"
+              />
             </div>
           </div>
 
