@@ -78,6 +78,7 @@ const Expenses = () => {
     remarks: '',
     paymentType: 'cash',
     bankAccountId: null,
+    vendorId: null,
     createdBy: userData?.userId || 0,
   })
 
@@ -121,6 +122,7 @@ const Expenses = () => {
       remarks: '',
       paymentType: 'cash',
       bankAccountId: null,
+      vendorId: null,
       createdBy: userData?.userId || 0,
     })
     setIsPopupOpen(false)
@@ -151,6 +153,7 @@ const Expenses = () => {
         expense.accountHeadName?.toLowerCase().includes(searchLower) ||
         expense.amount?.toString().includes(searchLower) ||
         expense.paymentType?.toLowerCase().includes(searchLower) ||
+        expense.vendorName?.toLowerCase().includes(searchLower) ||
         expense.remarks?.toLowerCase().includes(searchLower)
       )
     })
@@ -280,6 +283,12 @@ const Expenses = () => {
                 onClick={() => handleSort('bankName')}
                 className="cursor-pointer"
               >
+                Vendor <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('bankName')}
+                className="cursor-pointer"
+              >
                 Bank Details <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
@@ -318,6 +327,7 @@ const Expenses = () => {
                   <TableCell className="capitalize">
                     {expense.paymentType}
                   </TableCell>
+                  <TableCell>{expense.vendorName}</TableCell>
                   <TableCell>
                     {expense.bankName
                       ? `${expense.bankName} - ${expense.branch} - ${expense.accountNumber}`
@@ -426,6 +436,36 @@ const Expenses = () => {
                 onChange={(value) =>
                   handleSelectChange(
                     'accountHeadId',
+                    value ? String(value.id) : '0'
+                  )
+                }
+                placeholder="Select account head"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="vendorId">Vendor*</Label>
+              <CustomCombobox
+                items={
+                  vendors?.data?.map((vendor) => ({
+                    id: vendor?.vendorId?.toString() || '0',
+                    name: vendor.name || 'Unnamed account head',
+                  })) || []
+                }
+                value={
+                    formData.vendorId
+                      ? {
+                          id: formData.vendorId.toString(),
+                          name:
+                            vendors?.data?.find(
+                              (v) => v.vendorId === formData.vendorId
+                            )?.name || '',
+                        }
+                      : null
+                  }
+                onChange={(value) =>
+                  handleSelectChange(
+                    'vendorId',
                     value ? String(value.id) : '0'
                   )
                 }

@@ -262,6 +262,7 @@ export const expenseSchema = z.object({
   remarks: z.string().optional().nullable(),
   paymentType: z.enum(['bank', 'cash', 'mfs']),
   bankAccountId: z.number().int().optional().nullable(), // Foreign key, can be null
+  vendorId: z.number().int().optional().nullable(), // Foreign key, can be null
   createdBy: z.number().int(),
   createdAt: z.date().optional(), // Auto-handled by DB
   updatedBy: z.number().int().optional().nullable(),
@@ -270,6 +271,7 @@ export const expenseSchema = z.object({
 export const createExpenseSchema = expenseSchema.omit({ expenseId: true })
 export type GetExpenseType = z.infer<typeof expenseSchema> & {
   accountHeadName: string
+  vendorName: string
   bankName: string | null
   branch: string | null
   accountNumber: string | null
