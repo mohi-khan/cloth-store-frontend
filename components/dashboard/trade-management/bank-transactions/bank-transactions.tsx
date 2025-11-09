@@ -49,7 +49,7 @@ const BankTransactions = () => {
   const { data: allTransactions } = useGetTransactions()
 
   const bankTransactions = allTransactions?.data?.filter(
-    (t) => t.transactionType === 'contra'
+    (t) => t.transactionType === 'contra' && t.isCash === false
   )
   console.log('🚀 ~ BankTransactions ~ bankTransactions:', bankTransactions)
 
@@ -365,6 +365,12 @@ const BankTransactions = () => {
               >
                 Amount <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
+              <TableHead
+                onClick={() => handleSort('type')}
+                className="cursor-pointer"
+              >
+                Type <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -396,6 +402,9 @@ const BankTransactions = () => {
                   </TableCell>
                   <TableCell className="font-semibold">
                     {t.amount?.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="font-semibold">
+                    {t.bankId && t.amount!==null && t.amount > 0 ? 'Deposit' : 'Withdraw'}
                   </TableCell>
                   <TableCell>
                     {t.showEditButton && (

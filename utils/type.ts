@@ -313,6 +313,7 @@ export type CreateTransactionType = z.infer<typeof transactionSchema>
 export type GetTransactionType = z.infer<typeof transactionSchema> & {
   bankName: string | null
   branch: string | null
+  type: string
   bankAccount: string | null
   bankAccountName: string | null
   accountNumber: string | null
