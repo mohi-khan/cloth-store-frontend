@@ -84,7 +84,7 @@ const DashboardOverview = () => {
   )
 
   const totalCashInHand = cashInHand?.data?.reduce((sum: number, item: any) => {
-    return sum + (item.cashInHand || 0)
+    return sum + (item.amount || 0)
   }, 0)
 
   useEffect(() => {
