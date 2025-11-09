@@ -262,6 +262,7 @@ export const expenseSchema = z.object({
   remarks: z.string().optional().nullable(),
   paymentType: z.enum(['bank', 'cash', 'mfs']),
   bankAccountId: z.number().int().optional().nullable(), // Foreign key, can be null
+  vendorId: z.number().int().optional().nullable(), // Foreign key, can be null
   createdBy: z.number().int(),
   createdAt: z.date().optional(), // Auto-handled by DB
   updatedBy: z.number().int().optional().nullable(),
@@ -270,6 +271,7 @@ export const expenseSchema = z.object({
 export const createExpenseSchema = expenseSchema.omit({ expenseId: true })
 export type GetExpenseType = z.infer<typeof expenseSchema> & {
   accountHeadName: string
+  vendorName: string
   bankName: string | null
   branch: string | null
   accountNumber: string | null
@@ -311,6 +313,7 @@ export type CreateTransactionType = z.infer<typeof transactionSchema>
 export type GetTransactionType = z.infer<typeof transactionSchema> & {
   bankName: string | null
   branch: string | null
+  type: string
   bankAccount: string | null
   bankAccountName: string | null
   accountNumber: string | null
@@ -323,6 +326,7 @@ export const OpeningBalanceSchema = z.object({
   openingAmount: z.number(),
   isParty: z.boolean(),
   customerId: z.number().nullable(),
+  bankAccountId: z.number().nullable(),
   type: z.enum(['debit', 'credit']),
   createdBy: z.number(),
   createdAt: z.string(),
@@ -330,7 +334,12 @@ export const OpeningBalanceSchema = z.object({
   updatedAt: z.string().nullable(),
 });
 export type CreateOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
-export type GetOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
+export type GetOpeningBalanceType = z.infer<typeof OpeningBalanceSchema> & {
+  bankName: string | null
+  branch: string | null
+  accountNumber: string | null
+  customerName: string
+}
 
 export const cashReportSchema = z.object({
   id: z.number(),
