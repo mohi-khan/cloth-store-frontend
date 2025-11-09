@@ -334,7 +334,12 @@ export const OpeningBalanceSchema = z.object({
   updatedAt: z.string().nullable(),
 });
 export type CreateOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
-export type GetOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
+export type GetOpeningBalanceType = z.infer<typeof OpeningBalanceSchema> & {
+  bankName: string | null
+  branch: string | null
+  accountNumber: string | null
+  customerName: string
+}
 
 export const cashReportSchema = z.object({
   id: z.number(),

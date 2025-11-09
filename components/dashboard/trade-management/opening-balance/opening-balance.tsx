@@ -202,7 +202,11 @@ const OpeningBalance = () => {
     e.preventDefault()
     setError(null)
 
-    if (hasNonPartyBalance && formData.isParty === false) {
+    if (
+      hasNonPartyBalance &&
+      formData.isParty === false &&
+      formData.bankAccountId === null
+    ) {
       setError(
         "You can't select 'No' since a non-party balance already exists."
       )
@@ -276,6 +280,18 @@ const OpeningBalance = () => {
                 onClick={() => handleSort('openingAmount')}
                 className="cursor-pointer"
               >
+                Customer <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('openingAmount')}
+                className="cursor-pointer"
+              >
+                Bank Details <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('openingAmount')}
+                className="cursor-pointer"
+              >
                 Opening Amount <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
@@ -308,6 +324,12 @@ const OpeningBalance = () => {
             ) : (
               paginatedBalances.map((balance) => (
                 <TableRow key={balance.openingBalanceId}>
+                  <TableCell>{balance.customerName}</TableCell>
+                  <TableCell>
+                    {balance.bankAccountId
+                      ? `${balance.bankName} - ${balance.accountNumber} - ${balance.bankAccountId}`
+                      : '-'}
+                  </TableCell>
                   <TableCell>{balance.openingAmount.toFixed(2)}</TableCell>
                   <TableCell>
                     {formatDate(new Date(balance.createdAt))}
@@ -385,7 +407,7 @@ const OpeningBalance = () => {
         isOpen={isPopupOpen}
         onClose={resetForm}
         title="Add Opening Balance"
-        size="sm:max-w-xl"
+        size="sm:max-w-2xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
@@ -430,14 +452,12 @@ const OpeningBalance = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="true">Yes</SelectItem>
-                  <SelectItem disabled={hasNonPartyBalance} value="false">
-                    No
-                  </SelectItem>
+                  <SelectItem value="false">No</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="customerId">Bank Account*</Label>
               <CustomCombobox
                 items={
@@ -462,40 +482,66 @@ const OpeningBalance = () => {
                 }
                 placeholder="Select bank account"
               />
-            </div>
+            </div> */}
+            {formData.isParty ? (
+              <div className="space-y-2">
+                <Label htmlFor="customerId">Customer*</Label>
+                <CustomCombobox
+                  items={
+                    customers?.data?.map((customer) => ({
+                      id: customer?.customerId?.toString() || '0',
+                      name: customer.name || 'Unnamed customer',
+                    })) || []
+                  }
+                  value={
+                    formData?.customerId && formData.customerId > 0
+                      ? {
+                          id: formData.customerId.toString(),
+                          name:
+                            customers?.data?.find(
+                              (c) => c.customerId === formData.customerId
+                            )?.name || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) =>
+                    handleSelectChange(
+                      'customerId',
+                      value ? String(value.id) : '0'
+                    )
+                  }
+                  placeholder="Select customer"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="bankAccountId">Bank Account*</Label>
+                <CustomCombobox
+                  items={
+                    bankAccounts?.data?.map((b) => ({
+                      id: b.bankAccountId?.toString() || '0',
+                      name: `${b.bankName} - ${b.accountNumber} - ${b.branch}`,
+                    })) || []
+                  }
+                  value={
+                    formData.bankAccountId
+                      ? {
+                          id: formData.bankAccountId.toString(),
+                          name:
+                            bankAccounts?.data?.find(
+                              (b) => b.bankAccountId === formData.bankAccountId
+                            )?.bankName || '',
+                        }
+                      : null
+                  }
+                  onChange={(v) =>
+                    handleSelectChange('bankAccountId', v ? v.id : '0')
+                  }
+                  placeholder="Select bank account"
+                />
+              </div>
+            )}
           </div>
-
-          {formData.isParty && (
-            <div className="space-y-2">
-              <Label htmlFor="customerId">Customer*</Label>
-              <CustomCombobox
-                items={
-                  customers?.data?.map((customer) => ({
-                    id: customer?.customerId?.toString() || '0',
-                    name: customer.name || 'Unnamed customer',
-                  })) || []
-                }
-                value={
-                  formData?.customerId && formData.customerId > 0
-                    ? {
-                        id: formData?.customerId.toString(),
-                        name:
-                          customers?.data?.find(
-                            (c) => c.customerId === formData.customerId
-                          )?.name || '',
-                      }
-                    : null
-                }
-                onChange={(value) =>
-                  handleSelectChange(
-                    'customerId',
-                    value ? String(value.id) : '0'
-                  )
-                }
-                placeholder="Select customer"
-              />
-            </div>
-          )}
 
           {error && (
             <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
