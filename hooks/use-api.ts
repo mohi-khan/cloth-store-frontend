@@ -38,6 +38,7 @@ import {
   getAllVendors,
   getAllWastages,
   getAvailableItem,
+  getBankAccountBalanceSummary,
   getCashReport,
   getPartyReport,
   getProfitSummary,
@@ -832,6 +833,23 @@ export const useGetCashInHand = () => {
         throw new Error('Token not found')
       }
       return getAllCashInHand(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetBankAccountBalanceSummary = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['bankAccountBalanceSummary'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getBankAccountBalanceSummary(token)
     },
     enabled: !!token,
     select: (data) => data,

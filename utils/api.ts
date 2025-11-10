@@ -35,6 +35,7 @@ import {
   GetProfitSummary,
   GetWastageType,
   CreateWastageType,
+  GetBankAccountBalanceSummary,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -413,6 +414,17 @@ export async function getAllCashInHand(token: string) {
 export async function getProfitSummary(token: string) {
   return fetchApi<GetProfitSummary[]>({
     url: 'api/dashboard/profit-summary',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getBankAccountBalanceSummary(token: string) {
+  return fetchApi<GetBankAccountBalanceSummary[]>({
+    url: 'api/dashboard/bank-account-balance-summary',
     method: 'GET',
     headers: {
       Authorization: token,

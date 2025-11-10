@@ -394,6 +394,15 @@ export const profitSummarySchema = z.array(
 );
 export type GetProfitSummary = z.infer<typeof profitSummarySchema>
 
+export const bankAccountBalanceSummarySchema = z.array(
+  z.object({
+    id: z.number().int(),
+    bank_name: z.string(),
+    current_balance: z.number()
+  })
+)
+export type GetBankAccountBalanceSummary = z.infer<typeof bankAccountBalanceSummarySchema>
+
 export const wastageSchema = z.object({
   transactionId: z.number().optional(), // autoincrement primary key
   itemId: z.number().nullable(), // nullable because of onDelete: 'set null'
