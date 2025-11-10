@@ -33,6 +33,8 @@ import {
   GetPartyReportType,
   GetStockLedgerType,
   GetProfitSummary,
+  GetWastageType,
+  CreateWastageType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -527,6 +529,29 @@ export async function getStockLedger(
   return fetchApi<GetStockLedgerType[]>({
     url: `api/report/stock-ledger?startDate=${startDate}&endDate=${endDate}&itemId=${itemId}`,
     method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllWastages(token: string) {
+  return fetchApi<GetWastageType[]>({
+    url: 'api/wastage/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createWastage(data: CreateWastageType, token: string) {
+  return fetchApi<CreateWastageType>({
+    url: 'api/wastage/create',
+    method: 'POST',
+    body: data,
     headers: {
       Authorization: token,
       'Content-Type': 'application/json',

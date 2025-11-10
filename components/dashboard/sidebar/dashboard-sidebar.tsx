@@ -102,6 +102,10 @@ export function DashboardSidebar() {
           title: 'Opening Balance',
           href: '/dashboard/trade-management/opening-balance',
         },
+        {
+          title: 'Wastages',
+          href: '/dashboard/trade-management/wastages',
+        },
       ],
     },
     {
