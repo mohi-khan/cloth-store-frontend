@@ -394,6 +394,38 @@ export const profitSummarySchema = z.array(
 );
 export type GetProfitSummary = z.infer<typeof profitSummarySchema>
 
+export const bankAccountBalanceSummarySchema = z.array(
+  z.object({
+    id: z.number().int(),
+    bank_name: z.string(),
+    current_balance: z.number()
+  })
+)
+export type GetBankAccountBalanceSummary = z.infer<typeof bankAccountBalanceSummarySchema>
+
+export const wastageSchema = z.object({
+  transactionId: z.number().optional(), // autoincrement primary key
+  itemId: z.number().nullable(), // nullable because of onDelete: 'set null'
+  price: z.number(),
+  quantity: z.string().min(1),
+  transactionDate: z.string().refine(
+    (val) => !isNaN(Date.parse(val)),
+    "Invalid date format"
+  ),
+  reference: z.string().nullable().optional(),
+  referenceType: z.enum([
+    'wastage',
+  ]),
+  createdBy: z.number(),
+  createdAt: z.string().optional(), // handled automatically by DB
+  updatedBy: z.number().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
+});
+export type CreateWastageType = z.infer<typeof wastageSchema>
+export type GetWastageType = z.infer<typeof wastageSchema> & {
+  itemName: string
+}
+
 export interface User {
   userId: number
   username: string

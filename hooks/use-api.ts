@@ -13,6 +13,7 @@ import {
   createSorting,
   createTransaction,
   createVendor,
+  createWastage,
   deleteSale,
   deleteSorting,
   editBankAccount,
@@ -35,7 +36,9 @@ import {
   getAllSortings,
   getAllTransaction,
   getAllVendors,
+  getAllWastages,
   getAvailableItem,
+  getBankAccountBalanceSummary,
   getCashReport,
   getPartyReport,
   getProfitSummary,
@@ -54,6 +57,7 @@ import type {
   CreateSortingType,
   CreateTransactionType,
   CreateVendorType,
+  CreateWastageType,
   GetBankAccountType,
   GetBankTransactionType,
   GetCustomerType,
@@ -718,25 +722,25 @@ export const useAddAccountHead = ({
   return mutation
 }
 
-//expense
-export const useGetExpenses = () => {
+//wastage
+export const useGetWastages = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
 
   return useQuery({
-    queryKey: ['expenses'],
+    queryKey: ['wastages'],
     queryFn: () => {
       if (!token) {
         throw new Error('Token not found')
       }
-      return getAllExpenses(token)
+      return getAllWastages(token)
     },
     enabled: !!token,
     select: (data) => data,
   })
 }
 
-export const useAddExpense = ({
+export const useAddWastage = ({
   onClose,
   reset,
 }: {
@@ -748,18 +752,18 @@ export const useAddExpense = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: (data: CreateExpenseType) => {
-      return createExpense(data, token)
+    mutationFn: (data: CreateWastageType) => {
+      return createWastage(data, token)
     },
     onSuccess: (data) => {
-      console.log('expense added successfully:', data)
+      console.log('wastage added successfully:', data)
 
-      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['wastages'] })
       reset()
       onClose()
     },
     onError: (error) => {
-      console.error('Error adding item:', error)
+      console.error('Error adding wastage:', error)
     },
   })
 
@@ -829,6 +833,23 @@ export const useGetCashInHand = () => {
         throw new Error('Token not found')
       }
       return getAllCashInHand(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetBankAccountBalanceSummary = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['bankAccountBalanceSummary'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getBankAccountBalanceSummary(token)
     },
     enabled: !!token,
     select: (data) => data,
@@ -1026,4 +1047,52 @@ export const useGetStockLedger = (
     enabled: !!token,
     select: (data) => data,
   })
+}
+
+//expense
+export const useGetExpenses = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['expenses'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllExpenses(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddExpense = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateExpenseType) => {
+      return createExpense(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('expense added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding item:', error)
+    },
+  })
+
+  return mutation
 }

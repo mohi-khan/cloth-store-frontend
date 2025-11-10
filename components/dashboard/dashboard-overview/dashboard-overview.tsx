@@ -30,6 +30,7 @@ import {
   useGetCustomerPaymentDetails,
   useGetCashInHand,
   useGetProfitSummary,
+  useGetBankAccountBalanceSummary,
 } from '@/hooks/use-api'
 import { Popup } from '@/utils/popup'
 import {
@@ -70,6 +71,7 @@ const DashboardOverview = () => {
   console.log('🚀 ~ DashboardOverview ~ cashInHand:', cashInHand)
   const { data: profitSummary } = useGetProfitSummary()
   console.log('🚀 ~ DashboardOverview ~ profitSummary:', profitSummary)
+  const { data: bankBalanceSummary } = useGetBankAccountBalanceSummary()
 
   const totalAmount = InventoryItems?.data?.reduce((sum: number, item: any) => {
     const qty = Math.max(item.totQty, 0)
@@ -589,7 +591,7 @@ const DashboardOverview = () => {
         ))}
       </div>
 
-      {/* Charts and Calendar Section */}
+      {/* profit summary and bank balance summary */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader>
@@ -673,52 +675,80 @@ const DashboardOverview = () => {
           </CardContent>
         </Card>
 
-        {/* Enhanced Calendar */}
+        {/* Bank Account Balance Summary Line Graph */}
         <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="flex items-center gap-2">
-                Calendar
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigateMonth('prev')}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigateMonth('next')}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-              </h3>
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-emerald-600" />
+              Bank Account Balance
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-7 gap-1">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div
-                  key={day}
-                  className="text-center p-2 text-sm font-semibold text-gray-600 border-b"
-                >
-                  {day}
+            <div className="w-full h-80">
+              {bankBalanceSummary?.data &&
+              bankBalanceSummary.data.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={bankBalanceSummary.data}
+                    margin={{ top: 5, right: 30, left: 0, bottom: 50 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="0"
+                      stroke="#e5e7eb"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="bank_name"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      formatter={(value: number) =>
+                        value.toLocaleString('th-TH', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      }
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      }}
+                      cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
+                    />
+                    <Legend
+                      wrapperStyle={{ paddingTop: '20px' }}
+                      iconType="line"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="current_balance"
+                      stroke="#059669"
+                      name="Current Balance"
+                      strokeWidth={2.5}
+                      dot={{ fill: '#059669', r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
+                      isAnimationActive={true}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No bank account data available
                 </div>
-              ))}
-              {renderCalendar()}
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
-
       <Popup
         isOpen={modalState.isOpen}
         onClose={closeModal}
