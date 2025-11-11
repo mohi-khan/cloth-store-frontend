@@ -44,7 +44,7 @@ export type SignInResponse = z.infer<typeof SignInResponseSchema>
 export const itemSchema = z.object({
   itemId: z.number().optional(),
   itemName: z.string().min(1, 'Item name is required'),
-  sellPriece: z.number().positive('Sell price must be a positive number'),
+  sellPrice: z.number().positive('Sell price must be a positive number'),
   isBulk: z.boolean().optional().default(false),
   createdBy: z.number(),
   createdAt: z.coerce.date().optional().nullable(),
@@ -404,18 +404,16 @@ export const bankAccountBalanceSummarySchema = z.array(
 export type GetBankAccountBalanceSummary = z.infer<typeof bankAccountBalanceSummarySchema>
 
 export const wastageSchema = z.object({
-  transactionId: z.number().optional(), // autoincrement primary key
-  itemId: z.number().nullable(), // nullable because of onDelete: 'set null'
-  price: z.number(),
-  quantity: z.string().min(1),
-  transactionDate: z.string().refine(
+  wastageId: z.number().optional(),
+  itemId: z.number().nullable(),
+  quantity: z.number(),
+  sellPrice: z.number(),
+  netPrice: z.number(),
+  wastageDate: z.string().refine(
     (val) => !isNaN(Date.parse(val)),
     "Invalid date format"
   ),
-  reference: z.string().nullable().optional(),
-  referenceType: z.enum([
-    'wastage',
-  ]),
+  notes: z.string(),
   createdBy: z.number(),
   createdAt: z.string().optional(), // handled automatically by DB
   updatedBy: z.number().nullable().optional(),
