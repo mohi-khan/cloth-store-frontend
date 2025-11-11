@@ -67,7 +67,7 @@ const Items = () => {
 
   const [formData, setFormData] = useState<CreateItemType>({
     itemName: '',
-    sellPriece: 0,
+    sellPrice: 0,
     isBulk: false,
     createdBy: userData?.userId || 0,
   })
@@ -98,7 +98,7 @@ const Items = () => {
   const resetForm = () => {
     setFormData({
       itemName: '',
-      sellPriece: 0,
+      sellPrice: 0,
       isBulk: false,
       createdBy: userData?.userId || 0,
     })
@@ -130,7 +130,7 @@ const Items = () => {
       const searchLower = searchTerm.toLowerCase()
       return (
         item.itemName?.toLowerCase().includes(searchLower) ||
-        item.sellPriece?.toString().includes(searchLower)
+        item.sellPrice?.toString().includes(searchLower)
       )
     })
   }, [items?.data, searchTerm])
@@ -220,13 +220,13 @@ const Items = () => {
                 Item Name <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
-                onClick={() => handleSort('sellPriece')}
+                onClick={() => handleSort('sellPrice')}
                 className="cursor-pointer"
               >
                 Sell Price <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
-                onClick={() => handleSort('sellPriece')}
+                onClick={() => handleSort('sellPrice')}
                 className="cursor-pointer"
               >
                 Bulk Product
@@ -263,7 +263,7 @@ const Items = () => {
               paginatedItems.map((item) => (
                 <TableRow key={item.itemId}>
                   <TableCell>{item.itemName}</TableCell>
-                  <TableCell>{item.sellPriece.toFixed(2)}</TableCell>
+                  <TableCell>{item.sellPrice.toFixed(2)}</TableCell>
                   <TableCell>{item.isBulk === true ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{formatDate(item.createdAt)}</TableCell>
                 </TableRow>
@@ -355,14 +355,14 @@ const Items = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sellPriece">Sell Price*</Label>
+              <Label htmlFor="sellPrice">Sell Price*</Label>
               <Input
-                id="sellPriece"
-                name="sellPriece"
+                id="sellPrice"
+                name="sellPrice"
                 type="number"
                 step="0.01"
                 min="0.01"
-                value={formData.sellPriece}
+                value={formData.sellPrice}
                 onChange={handleInputChange}
                 required
               />

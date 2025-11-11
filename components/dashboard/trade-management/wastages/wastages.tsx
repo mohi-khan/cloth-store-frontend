@@ -21,8 +21,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { ArrowUpDown, Search, Trash2 } from 'lucide-react'
-import { Popup } from '@/utils/popup'
 import type { CreateWastageType, GetWastageType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -30,6 +36,8 @@ import { useRouter } from 'next/navigation'
 import formatDate from '@/utils/formatDate'
 import { useAddWastage, useGetItems, useGetWastages } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { Popup } from '@/utils/popup'
+import { Textarea } from '@/components/ui/textarea'
 
 const Wastages = () => {
   useInitializeUser()
@@ -37,9 +45,7 @@ const Wastages = () => {
   console.log('🚀 ~ Wastages ~ userData:', userData?.userId)
   const [token] = useAtom(tokenAtom)
 
-  const { data: rawWastages } = useGetWastages()
-  const wastages =
-    rawWastages?.data?.filter((wastage: GetWastageType) => wastage.referenceType === 'wastage') || []
+  const { data: wastages } = useGetWastages()
   const { data: rawItems } = useGetItems()
   const items = rawItems?.data || []
 
@@ -49,7 +55,7 @@ const Wastages = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
   const [sortColumn, setSortColumn] =
-    useState<keyof GetWastageType>('transactionDate')
+    useState<keyof GetWastageType>('wastageDate')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -57,11 +63,11 @@ const Wastages = () => {
 
   const [formData, setFormData] = useState<CreateWastageType>({
     itemId: null,
-    price: 0,
-    quantity: '',
-    transactionDate: new Date().toISOString().split('T')[0],
-    reference: null,
-    referenceType: 'wastage',
+    quantity: 0,
+    sellPrice: 0,
+    netPrice: 0,
+    wastageDate: new Date().toISOString().split('T')[0],
+    notes: '',
     createdBy: userData?.userId || 0,
   })
 
@@ -79,17 +85,28 @@ const Wastages = () => {
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: Number(value) }))
+    const selectedItemId = Number(value)
+    setFormData((prev) => ({ ...prev, [name]: selectedItemId }))
+
+    if (name === 'itemId') {
+      const selectedItem = items.find((item) => item.itemId === selectedItemId)
+      if (selectedItem) {
+        setFormData((prev) => ({
+          ...prev,
+          sellPrice: selectedItem.sellPrice || 0,
+        }))
+      }
+    }
   }
 
   const resetForm = () => {
     setFormData({
       itemId: null,
-      price: 0,
-      quantity: '',
-      transactionDate: new Date().toISOString().split('T')[0],
-      reference: null,
-      referenceType: 'wastage',
+      quantity: 0,
+      sellPrice: 0,
+      netPrice: 0,
+      wastageDate: new Date().toISOString().split('T')[0],
+      notes: '',
       createdBy: userData?.userId || 0,
     })
     setIsPopupOpen(false)
@@ -113,14 +130,15 @@ const Wastages = () => {
   }
 
   const filteredWastages = useMemo(() => {
-    if (!wastages) return []
-    return wastages.filter((wastage: GetWastageType) => {
+    if (!wastages?.data) return []
+    return wastages.data?.filter((wastage: GetWastageType) => {
       const searchLower = searchTerm.toLowerCase()
       return (
         wastage.itemName?.toLowerCase().includes(searchLower) ||
-        wastage.price?.toString().includes(searchLower) ||
-        wastage.quantity?.toLowerCase().includes(searchLower) ||
-        wastage.reference?.toLowerCase().includes(searchLower)
+        wastage.sellPrice?.toString().includes(searchLower) ||
+        wastage.netPrice?.toString().includes(searchLower) ||
+        wastage.notes?.toString().includes(searchLower) ||
+        wastage.quantity?.toString().includes(searchLower)
       )
     })
   }, [wastages, searchTerm])
@@ -154,12 +172,12 @@ const Wastages = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!formData.quantity || formData.quantity.trim() === '') {
-      setError('Please enter quantity')
+    if (formData.quantity <= 0) {
+      setError('Please enter a valid quantity')
       return
     }
-    if (formData.price <= 0) {
-      setError('Please enter a valid price')
+    if (formData.netPrice < 0) {
+      setError('Please enter a valid net price')
       return
     }
 
@@ -222,16 +240,28 @@ const Wastages = () => {
                 Quantity <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
-                onClick={() => handleSort('price')}
+                onClick={() => handleSort('sellPrice')}
                 className="cursor-pointer"
               >
-                Price <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                Sell Price <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead
-                onClick={() => handleSort('transactionDate')}
+                onClick={() => handleSort('netPrice')}
+                className="cursor-pointer"
+              >
+                Net Price <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('wastageDate')}
                 className="cursor-pointer"
               >
                 Transaction Date <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('notes')}
+                className="cursor-pointer"
+              >
+                Notes <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -242,7 +272,7 @@ const Wastages = () => {
                   Loading wastages...
                 </TableCell>
               </TableRow>
-            ) : wastages.length === 0 ? (
+            ) : wastages.data?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-4">
                   No wastages found
@@ -256,11 +286,15 @@ const Wastages = () => {
               </TableRow>
             ) : (
               paginatedWastages.map((wastage) => (
-                <TableRow key={wastage.transactionId}>
+                <TableRow key={wastage.wastageId}>
                   <TableCell>{wastage.itemName}</TableCell>
                   <TableCell>{wastage.quantity}</TableCell>
-                  <TableCell>{wastage.price.toFixed(2)}</TableCell>
-                  <TableCell>{formatDate(new Date(wastage.transactionDate))}</TableCell>
+                  <TableCell>{wastage.sellPrice.toFixed(2)}</TableCell>
+                  <TableCell>{wastage.netPrice.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {formatDate(new Date(wastage.wastageDate))}
+                  </TableCell>
+                  <TableCell>{wastage.notes}</TableCell>
                 </TableRow>
               ))
             )}
@@ -372,7 +406,9 @@ const Wastages = () => {
               <Input
                 id="quantity"
                 name="quantity"
-                type="text"
+                type="number"
+                step="0.01"
+                min="0"
                 value={formData.quantity}
                 onChange={handleInputChange}
                 placeholder="Enter quantity"
@@ -380,31 +416,57 @@ const Wastages = () => {
               />
             </div>
 
-            {/* Price */}
+            {/* Sells Price (Read-only) */}
             <div className="space-y-2">
-              <Label htmlFor="price">Price*</Label>
+              <Label htmlFor="sellPrice">Sell Price</Label>
               <Input
-                id="price"
-                name="price"
+                id="sellPrice"
+                name="sellPrice"
                 type="number"
                 step="0.01"
-                min="0"
-                value={formData.price}
-                onChange={handleInputChange}
-                required
+                value={formData.sellPrice}
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
+              />
+            </div>
+
+            {/* Net Price */}
+            <div className="space-y-2">
+              <Label htmlFor="netPrice">Net Price*</Label>
+              <Input
+                id="netPrice"
+                name="netPrice"
+                type="number"
+                step="0.01"
+                value={formData.sellPrice * formData.quantity}
+                disabled
+                placeholder="Enter net price"
+                className="bg-gray-100 cursor-not-allowed"
               />
             </div>
 
             {/* Transaction Date */}
             <div className="space-y-2">
-              <Label htmlFor="transactionDate">Transaction Date*</Label>
+              <Label htmlFor="wastageDate">Transaction Date*</Label>
               <Input
-                id="transactionDate"
-                name="transactionDate"
+                id="wastageDate"
+                name="wastageDate"
                 type="date"
-                value={formData.transactionDate}
+                value={formData.wastageDate}
                 onChange={handleInputChange}
                 required
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                placeholder="Enter any remarks or notes"
+                className="w-full border border-input bg-background rounded-md p-2 min-h-[80px] text-sm"
               />
             </div>
           </div>
@@ -415,14 +477,14 @@ const Wastages = () => {
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={resetForm}>
               Cancel
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? 'Saving...' : 'Save'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </Popup>
     </div>
