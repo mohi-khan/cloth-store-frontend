@@ -662,7 +662,7 @@ const Sales = () => {
               >
                 Notes <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead>Actions</TableHead>
+              {/* <TableHead>Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -712,7 +712,7 @@ const Sales = () => {
                       : '-'}
                   </TableCell>
                   <TableCell>{sale.salesMaster?.notes || '-'}</TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
@@ -722,7 +722,7 @@ const Sales = () => {
                         <Edit2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))
             )}

@@ -11,6 +11,7 @@ import {
   createPurchase,
   createSale,
   createSorting,
+  createStockAdjustment,
   createTransaction,
   createVendor,
   createWastage,
@@ -34,6 +35,7 @@ import {
   getAllPurchases,
   getAllSales,
   getAllSortings,
+  getAllStockAdjustments,
   getAllTransaction,
   getAllVendors,
   getAllWastages,
@@ -55,6 +57,7 @@ import type {
   CreatePurchaseType,
   CreateSalesType,
   CreateSortingType,
+  CreateStockAdjustmentType,
   CreateTransactionType,
   CreateVendorType,
   CreateWastageType,
@@ -1091,6 +1094,53 @@ export const useAddExpense = ({
     },
     onError: (error) => {
       console.error('Error adding item:', error)
+    },
+  })
+
+  return mutation
+}
+
+export const useGetStockAdjustments = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['stockAdjustments'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllStockAdjustments(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddStockAdjustment = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateStockAdjustmentType) => {
+      return createStockAdjustment(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('stock adjustment added successfully:', data)
+
+      queryClient.invalidateQueries({ queryKey: ['stockAdjustments'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding stock adjustment:', error)
     },
   })
 
