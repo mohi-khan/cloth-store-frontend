@@ -424,6 +424,22 @@ export type GetWastageType = z.infer<typeof wastageSchema> & {
   itemName: string
 }
 
+export const stockAdjustmentSchema = z.object({
+  adjustmentId: z.number().optional(),
+  prevItemId: z.number().nullable(),
+  newItemId: z.number().nullable(),
+  quantity: z.number(),
+  createdBy: z.number(),
+  createdAt: z.string().optional(), // or z.date().optional() depending on your data format
+  updatedBy: z.number().nullable().optional(),
+  updatedAt: z.string().nullable().optional(), // or z.date().nullable().optional()
+})
+export type CreateStockAdjustmentType = z.infer<typeof stockAdjustmentSchema>
+export type GetStockAdjustmentType = z.infer<typeof stockAdjustmentSchema> & {
+  prevItemName: string
+  newItemName: string
+}
+
 export interface User {
   userId: number
   username: string

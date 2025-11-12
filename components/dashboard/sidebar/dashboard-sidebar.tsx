@@ -83,6 +83,10 @@ export function DashboardSidebar() {
           href: '/dashboard/trade-management/sorting',
         },
         {
+          title: 'Stock Adjustment',
+          href: '/dashboard/trade-management/stock-adjustments',
+        },
+        {
           title: 'Sales',
           href: '/dashboard/trade-management/sales',
         },

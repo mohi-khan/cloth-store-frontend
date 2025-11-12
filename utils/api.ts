@@ -36,6 +36,8 @@ import {
   GetWastageType,
   CreateWastageType,
   GetBankAccountBalanceSummary,
+  CreateStockAdjustmentType,
+  GetStockAdjustmentType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -562,6 +564,32 @@ export async function getAllWastages(token: string) {
 export async function createWastage(data: CreateWastageType, token: string) {
   return fetchApi<CreateWastageType>({
     url: 'api/wastage/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllStockAdjustments(token: string) {
+  return fetchApi<GetStockAdjustmentType[]>({
+    url: 'api/stock-adjustment/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createStockAdjustment(
+  data: CreateStockAdjustmentType,
+  token: string
+) {
+  return fetchApi<CreateStockAdjustmentType>({
+    url: 'api/stock-adjustment/create',
     method: 'POST',
     body: data,
     headers: {
