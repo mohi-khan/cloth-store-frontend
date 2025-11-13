@@ -371,6 +371,7 @@ const DashboardOverview = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Customer Name</TableHead>
+                    <TableHead className="text-right">Opening Balance</TableHead>
                     <TableHead className="text-right">Total Sales</TableHead>
                     <TableHead className="text-right">Total Discount</TableHead>
                     <TableHead className="text-right">Total Received</TableHead>
@@ -385,6 +386,9 @@ const DashboardOverview = () => {
                         <TableRow key={index}>
                           <TableCell className="font-medium">
                             {item.customer_name}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {item.opening_balance}
                           </TableCell>
                           <TableCell className="text-right">
                             {item.total_sales.toLocaleString('th-TH', {

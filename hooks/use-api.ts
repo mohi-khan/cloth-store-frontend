@@ -128,6 +128,11 @@ export const useAddItem = ({
     },
     onError: (error) => {
       console.error('Error adding item:', error)
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: 'Error adding purchase',
+      })
     },
   })
 
@@ -327,18 +332,37 @@ export const useAddPurchase = ({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: (data: CreatePurchaseType) => {
-      return createPurchase(data, token)
+    mutationFn: async (data: CreatePurchaseType) => {
+      const response = await createPurchase(data, token)
+
+      if ((response as any)?.status === 'error' || response?.error) {
+        throw new Error(
+          (response as any)?.message ||
+            response?.error?.message ||
+            'Failed to add purchase'
+        )
+      }
+      return response
     },
+
     onSuccess: (data) => {
       console.log('purchase added successfully:', data)
-
+      toast({
+        title: 'Success!',
+        description: 'Purchase added successfully.',
+      })
       queryClient.invalidateQueries({ queryKey: ['purchases'] })
       reset()
       onClose()
     },
-    onError: (error) => {
+
+    onError: (error: any) => {
       console.error('Error adding purchase:', error)
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: error.message || 'Error adding purchase.',
+      })
     },
   })
 
@@ -385,7 +409,10 @@ export const useAddSorting = ({
     },
     onSuccess: (data) => {
       console.log('sorting added successfully:', data)
-
+      toast({
+        title: 'Success!',
+        description: 'sorting added successfully.',
+      })
       queryClient.invalidateQueries({ queryKey: ['sortings'] })
       reset()
       onClose()
