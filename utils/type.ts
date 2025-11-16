@@ -441,6 +441,23 @@ export type GetStockAdjustmentType = z.infer<typeof stockAdjustmentSchema> & {
   newItemName: string
 }
 
+export const loanSchema = z.object({
+  loanId: z.number().optional(), // auto-increment
+  uniqueName: z.string().max(255),
+  vendorId: z.number().nullable().optional(), 
+  loanDate: z.string().date().or(z.string()),
+  loanAmountReceivable: z.number(),
+  remarks: z.string().nullable().optional(),
+  createdBy: z.number(),
+  createdAt: z.date().optional(),
+  updatedBy: z.number().nullable().optional(),
+  updatedAt: z.date().nullable().optional(),
+});
+export type CreateLoanType = z.infer<typeof loanSchema>
+export type GetLoanType = z.infer<typeof loanSchema> & {
+  vendorName: string
+}
+
 export interface User {
   userId: number
   username: string

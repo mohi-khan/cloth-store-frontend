@@ -7,6 +7,7 @@ import {
   createCustomer,
   createExpense,
   createItem,
+  createLoan,
   createOpeningBalance,
   createPurchase,
   createSale,
@@ -31,6 +32,7 @@ import {
   getAllExpenses,
   getAllInventoryItems,
   getAllItems,
+  getAllLoans,
   getAllOpeningBalances,
   getAllPurchases,
   getAllSales,
@@ -53,6 +55,7 @@ import type {
   CreateCustomerType,
   CreateExpenseType,
   CreateItemType,
+  CreateLoanType,
   CreateOpeningBalanceType,
   CreatePurchaseType,
   CreateSalesType,
@@ -362,6 +365,72 @@ export const useAddPurchase = ({
         title: 'Error',
         variant: 'destructive',
         description: error.message || 'Error adding purchase.',
+      })
+    },
+  })
+
+  return mutation
+}
+
+export const useGetLoans = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['loans'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllLoans(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useAddLoan = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: async (data: CreateLoanType) => {
+      const response = await createLoan(data, token)
+
+      if ((response as any)?.status === 'error' || response?.error) {
+        throw new Error(
+          (response as any)?.message ||
+            response?.error?.message ||
+            'Failed to add laon'
+        )
+      }
+      return response
+    },
+
+    onSuccess: (data) => {
+      console.log('laon added successfully:', data)
+      toast({
+        title: 'Success!',
+        description: 'Loan added successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['loans'] })
+      reset()
+      onClose()
+    },
+
+    onError: (error: any) => {
+      console.error('Error adding laon:', error)
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: error.message || 'Error adding laon.',
       })
     },
   })
