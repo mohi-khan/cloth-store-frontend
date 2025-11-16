@@ -38,6 +38,8 @@ import {
   GetBankAccountBalanceSummary,
   CreateStockAdjustmentType,
   GetStockAdjustmentType,
+  CreateLoanType,
+  GetLoanType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -360,6 +362,29 @@ export async function createAccountHead(
 export async function getAllExpenses(token: string) {
   return fetchApi<GetExpenseType[]>({
     url: 'api/expense/getAll',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createLoan(data: CreateLoanType, token: string) {
+  return fetchApi<CreateLoanType>({
+    url: 'api/loan/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllLoans(token: string) {
+  return fetchApi<GetLoanType[]>({
+    url: 'api/loan/getAll',
     method: 'GET',
     headers: {
       Authorization: token,

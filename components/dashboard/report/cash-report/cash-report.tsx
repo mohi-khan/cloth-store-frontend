@@ -46,9 +46,9 @@ const CashReport = () => {
 
   const exportToExcel = () => {
     const flatData = cashReports?.data?.map((report) => ({
-      'Date': formatDate(new Date(report.date)),
-      'Particular': report.particular || 'N/A',
-      'Amount': report.amount,
+      Date: formatDate(new Date(report.date)),
+      Particular: report.particular || 'N/A',
+      Amount: report.amount,
     }))
 
     const worksheet = XLSX.utils.json_to_sheet(flatData as any[])
@@ -263,12 +263,8 @@ const CashReport = () => {
                 <Table>
                   <TableHeader className="bg-amber-100 pdf-table-header">
                     <TableRow>
-                      <TableHead className="font-bold">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-bold">
-                        Particular
-                      </TableHead>
+                      <TableHead className="font-bold">Date</TableHead>
+                      <TableHead className="font-bold">Particular</TableHead>
                       <TableHead className="font-bold">Amount</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -279,7 +275,17 @@ const CashReport = () => {
                           {formatDate(new Date(report.date))}
                         </TableCell>
                         <TableCell>{report.particular}</TableCell>
-                        <TableCell>{report.amount}</TableCell>
+                        <TableCell
+                          className={
+                            report.amount < 0 || report.particular?.includes('Payment')
+                              ? 'text-red-600'
+                              : 'text-green-600'
+                          }
+                        >
+                          {report.particular?.includes('Payment')
+                            ? -report.amount
+                            : report.amount}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
