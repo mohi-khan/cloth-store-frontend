@@ -85,6 +85,7 @@ export const vendorSchema = z.object({
     .optional()
     .nullable(),
   address: z.string().max(255).optional().nullable(),
+  loanGroup: z.boolean(),
   createdBy: z.number().int(),
   createdAt: z.date().optional(),
   updatedBy: z.number().int().optional().nullable(),

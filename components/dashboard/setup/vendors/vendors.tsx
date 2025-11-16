@@ -1,11 +1,18 @@
-"use client"
+'use client'
 
-import type React from "react"
-import { useCallback, useEffect, useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import type React from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Pagination,
   PaginationContent,
@@ -13,15 +20,16 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
-import { ArrowUpDown, Search, Users } from "lucide-react"
-import { Popup } from "@/utils/popup"
-import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
-import { useAtom } from "jotai"
-import { useRouter } from "next/navigation"
-import { useGetVendors, useAddVendor, useEditVendor } from "@/hooks/use-api"
-import formatDate from "@/utils/formatDate"
-import type { CreateVendorType, GetVendorType } from "@/utils/type"
+} from '@/components/ui/pagination'
+import { ArrowUpDown, Search, Users } from 'lucide-react'
+import { Popup } from '@/utils/popup'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
+import { useGetVendors, useAddVendor, useEditVendor } from '@/hooks/use-api'
+import formatDate from '@/utils/formatDate'
+import type { CreateVendorType, GetVendorType } from '@/utils/type'
+import { Checkbox } from '@/components/ui/checkbox'
 
 const Vendors = () => {
   useInitializeUser()
@@ -34,17 +42,17 @@ const Vendors = () => {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
-  const [sortColumn, setSortColumn] = useState<keyof GetVendorType>("name")
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
-  const [searchTerm, setSearchTerm] = useState("")
+  const [sortColumn, setSortColumn] = useState<keyof GetVendorType>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     const checkUserData = () => {
-      const storedUserData = localStorage.getItem("currentUser")
-      const storedToken = localStorage.getItem("authToken")
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
       if (!storedUserData || !storedToken) {
-        console.log("No user data or token found in localStorage")
-        router.push("/")
+        console.log('No user data or token found in localStorage')
+        router.push('/')
         return
       }
     }
@@ -57,20 +65,21 @@ const Vendors = () => {
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<CreateVendorType>({
-    name: "",
-    contactPerson: "",
-    phone: "",
-    email: "",
-    address: "",
+    name: '',
+    contactPerson: '',
+    phone: '',
+    email: '',
+    address: '',
+    loanGroup: false,
     createdBy: userData?.userId || 0,
   })
 
   const handleSort = (column: keyof GetVendorType) => {
     if (column === sortColumn) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
       setSortColumn(column)
-      setSortDirection("asc")
+      setSortDirection('asc')
     }
   }
 
@@ -90,19 +99,21 @@ const Vendors = () => {
 
   const sortedVendors = useMemo(() => {
     return [...filteredVendors].sort((a, b) => {
-      const aValue = a[sortColumn] ?? ""
-      const bValue = b[sortColumn] ?? ""
+      const aValue = a[sortColumn] ?? ''
+      const bValue = b[sortColumn] ?? ''
 
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue
       }
 
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue)
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue)
       }
 
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
       return 0
     })
   }, [filteredVendors, sortColumn, sortDirection])
@@ -127,10 +138,11 @@ const Vendors = () => {
     setEditingVendor(vendor)
     setFormData({
       name: vendor.name,
-      contactPerson: vendor.contactPerson || "",
-      phone: vendor.phone || "",
-      email: vendor.email || "",
-      address: vendor.address || "",
+      contactPerson: vendor.contactPerson || '',
+      phone: vendor.phone || '',
+      email: vendor.email || '',
+      address: vendor.address || '',
+      loanGroup: vendor.loanGroup || false,
       createdBy: userData?.userId || 0,
       updatedBy: userData?.userId || 0,
     })
@@ -146,11 +158,12 @@ const Vendors = () => {
 
   const resetForm = useCallback(() => {
     setFormData({
-      name: "",
-      contactPerson: "",
-      phone: "",
-      email: "",
-      address: "",
+      name: '',
+      contactPerson: '',
+      phone: '',
+      email: '',
+      address: '',
+      loanGroup: false,
       createdBy: userData?.userId || 0,
     })
     setIsPopupOpen(false)
@@ -180,7 +193,11 @@ const Vendors = () => {
 
       try {
         if (isEditMode && editingVendor) {
-          if (editingVendor?.vendorId === undefined || editingVendor?.createdBy === undefined) return
+          if (
+            editingVendor?.vendorId === undefined ||
+            editingVendor?.createdBy === undefined
+          )
+            return
 
           editMutation.mutate({
             id: editingVendor.vendorId,
@@ -204,11 +221,22 @@ const Vendors = () => {
         }
         resetForm()
       } catch (error) {
-        setError(`Failed to ${isEditMode ? "update" : "create"} vendor`)
-        console.error(`Error ${isEditMode ? "updating" : "creating"} vendor:`, error)
+        setError(`Failed to ${isEditMode ? 'update' : 'create'} vendor`)
+        console.error(
+          `Error ${isEditMode ? 'updating' : 'creating'} vendor:`,
+          error
+        )
       }
     },
-    [formData, userData, isEditMode, editingVendor, addMutation, editMutation, resetForm],
+    [
+      formData,
+      userData,
+      isEditMode,
+      editingVendor,
+      addMutation,
+      editMutation,
+      resetForm,
+    ]
   )
 
   return (
@@ -230,7 +258,10 @@ const Vendors = () => {
               className="pl-10 w-64"
             />
           </div>
-          <Button className="bg-yellow-400 hover:bg-yellow-500 text-black" onClick={handleAdd}>
+          <Button
+            className="bg-yellow-400 hover:bg-yellow-500 text-black"
+            onClick={handleAdd}
+          >
             Add
           </Button>
         </div>
@@ -240,19 +271,34 @@ const Vendors = () => {
         <Table>
           <TableHeader className="bg-amber-100">
             <TableRow>
-              <TableHead onClick={() => handleSort("name")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('name')}
+                className="cursor-pointer"
+              >
                 Vendor Name <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead onClick={() => handleSort("contactPerson")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('contactPerson')}
+                className="cursor-pointer"
+              >
                 Contact Person <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead onClick={() => handleSort("phone")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('phone')}
+                className="cursor-pointer"
+              >
                 Phone <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead onClick={() => handleSort("email")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('email')}
+                className="cursor-pointer"
+              >
                 Email <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
-              <TableHead onClick={() => handleSort("createdAt")} className="cursor-pointer">
+              <TableHead
+                onClick={() => handleSort('createdAt')}
+                className="cursor-pointer"
+              >
                 Created At <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
               <TableHead>Actions</TableHead>
@@ -286,7 +332,11 @@ const Vendors = () => {
                   <TableCell>{vendor.email}</TableCell>
                   <TableCell>{formatDate(vendor.createdAt)}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(vendor)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(vendor)}
+                    >
                       Edit
                     </Button>
                   </TableCell>
@@ -303,21 +353,35 @@ const Vendors = () => {
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  className={
+                    currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                  }
                 />
               </PaginationItem>
 
               {[...Array(totalPages)].map((_, index) => {
-                if (index === 0 || index === totalPages - 1 || (index >= currentPage - 2 && index <= currentPage + 2)) {
+                if (
+                  index === 0 ||
+                  index === totalPages - 1 ||
+                  (index >= currentPage - 2 && index <= currentPage + 2)
+                ) {
                   return (
                     <PaginationItem key={`page-${index}`}>
-                      <PaginationLink onClick={() => setCurrentPage(index + 1)} isActive={currentPage === index + 1}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(index + 1)}
+                        isActive={currentPage === index + 1}
+                      >
                         {index + 1}
                       </PaginationLink>
                     </PaginationItem>
                   )
-                } else if (index === currentPage - 3 || index === currentPage + 3) {
+                } else if (
+                  index === currentPage - 3 ||
+                  index === currentPage + 3
+                ) {
                   return (
                     <PaginationItem key={`ellipsis-${index}`}>
                       <PaginationLink>...</PaginationLink>
@@ -330,8 +394,14 @@ const Vendors = () => {
 
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? 'pointer-events-none opacity-50'
+                      : ''
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
@@ -342,11 +412,11 @@ const Vendors = () => {
       <Popup
         isOpen={isPopupOpen}
         onClose={resetForm}
-        title={isEditMode ? "Edit Vendor" : "Add Vendor"}
-        size="sm:max-w-md"
+        title={isEditMode ? 'Edit Vendor' : 'Add Vendor'}
+        size="sm:max-w-2xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Vendor Name*</Label>
               <Input
@@ -365,7 +435,7 @@ const Vendors = () => {
               <Input
                 id="contactPerson"
                 name="contactPerson"
-                value={formData.contactPerson || ""}
+                value={formData.contactPerson || ''}
                 onChange={handleInputChange}
                 placeholder="Enter contact person name"
                 maxLength={100}
@@ -377,7 +447,7 @@ const Vendors = () => {
               <Input
                 id="phone"
                 name="phone"
-                value={formData.phone || ""}
+                value={formData.phone || ''}
                 onChange={handleInputChange}
                 placeholder="Enter phone number"
                 maxLength={20}
@@ -390,7 +460,7 @@ const Vendors = () => {
                 id="email"
                 name="email"
                 type="email"
-                value={formData.email || ""}
+                value={formData.email || ''}
                 onChange={handleInputChange}
                 placeholder="Enter email address"
                 maxLength={100}
@@ -402,11 +472,24 @@ const Vendors = () => {
               <Input
                 id="address"
                 name="address"
-                value={formData.address || ""}
+                value={formData.address || ''}
                 onChange={handleInputChange}
                 placeholder="Enter address"
                 maxLength={255}
               />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2 mt-3">
+              <Checkbox
+                id="loanGroup"
+                name="loanGroup"
+                checked={formData.loanGroup || false}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, loanGroup: checked }))
+                }
+              />
+              <Label htmlFor="loanGroup">Loan Group</Label>
             </div>
           </div>
 
@@ -416,7 +499,7 @@ const Vendors = () => {
             <Button type="button" variant="outline" onClick={resetForm}>
               Cancel
             </Button>
-            <Button type="submit">{isEditMode ? "Update" : "Save"}</Button>
+            <Button type="submit">{isEditMode ? 'Update' : 'Save'}</Button>
           </div>
         </form>
       </Popup>
