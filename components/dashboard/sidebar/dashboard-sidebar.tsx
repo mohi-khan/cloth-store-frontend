@@ -133,6 +133,10 @@ export function DashboardSidebar() {
           title: 'Stock Ledger',
           href: '/dashboard/report/stock-ledger',
         },
+        {
+          title: 'Loan Report',
+          href: '/dashboard/report/loan-report',
+        },
       ],
     },
   ]
