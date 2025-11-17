@@ -44,6 +44,7 @@ import {
   getAvailableItem,
   getBankAccountBalanceSummary,
   getCashReport,
+  getLoanReport,
   getPartyReport,
   getProfitSummary,
   getStockLedger,
@@ -73,6 +74,7 @@ import type {
   GetVendorType,
 } from '@/utils/type'
 import { toast } from './use-toast'
+import { unique } from 'next/dist/build/utils'
 
 //item
 export const useGetItems = () => {
@@ -1122,6 +1124,22 @@ export const useGetPartyReport = (
         throw new Error('Token not found')
       }
       return getPartyReport(startDate, endDate, partyId, token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetLoanReport = (unique_name: string) => {
+  const [token] = useAtom(tokenAtom)
+
+  return useQuery({
+    queryKey: ['loanReport', unique_name],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getLoanReport(unique_name, token)
     },
     enabled: !!token,
     select: (data) => data,

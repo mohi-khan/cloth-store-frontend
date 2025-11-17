@@ -283,8 +283,8 @@ export const inventoryItems = z.object({
   item_name: z.string(),
   totQty: z.number(),
   price: z.number(),
-});
-export type GetInventoryItemsType = z.infer<typeof inventoryItems>;
+})
+export type GetInventoryItemsType = z.infer<typeof inventoryItems>
 
 export const customerPaymentSchema = z.object({
   customer_id: z.number(),
@@ -293,8 +293,10 @@ export const customerPaymentSchema = z.object({
   total_discount: z.number(),
   total_received: z.number(),
   unpaid_amount: z.number(),
-});
-export type GetCustomerPaymentDetailsType = z.infer<typeof customerPaymentSchema>;
+})
+export type GetCustomerPaymentDetailsType = z.infer<
+  typeof customerPaymentSchema
+>
 
 export const transactionSchema = z.object({
   transactionId: z.number().int().optional(), // auto-increment
@@ -333,7 +335,7 @@ export const OpeningBalanceSchema = z.object({
   createdAt: z.string(),
   updatedBy: z.number().nullable(),
   updatedAt: z.string().nullable(),
-});
+})
 export type CreateOpeningBalanceType = z.infer<typeof OpeningBalanceSchema>
 export type GetOpeningBalanceType = z.infer<typeof OpeningBalanceSchema> & {
   bankName: string | null
@@ -347,16 +349,16 @@ export const cashReportSchema = z.object({
   date: z.string(),
   particular: z.string(),
   amount: z.number(),
-});
-export type GetCashReportType = z.infer<typeof cashReportSchema>;
+})
+export type GetCashReportType = z.infer<typeof cashReportSchema>
 
 export const partyReportSchema = z.object({
   id: z.number(),
   date: z.string(),
   particular: z.string(),
   amount: z.number(),
-});
-export type GetPartyReportType = z.infer<typeof partyReportSchema>;
+})
+export type GetPartyReportType = z.infer<typeof partyReportSchema>
 
 export const stockLedgerSchema = z.object({
   id: z.number(),
@@ -367,8 +369,8 @@ export const stockLedgerSchema = z.object({
   quantity: z.number(),
   transaction_date: z.string().nullable(),
   balance: z.number(),
-});
-export type GetStockLedgerType = z.infer<typeof stockLedgerSchema>;
+})
+export type GetStockLedgerType = z.infer<typeof stockLedgerSchema>
 
 export const bankTransactionSchema = z.object({
   id: z.number().optional(),
@@ -377,12 +379,12 @@ export const bankTransactionSchema = z.object({
   bankAccountId: z.number(),
   amount: z.number(),
 })
-export type CreateBankTransactionType = z.infer<typeof bankTransactionSchema>;
+export type CreateBankTransactionType = z.infer<typeof bankTransactionSchema>
 export type GetBankTransactionType = z.infer<typeof bankTransactionSchema> & {
   bankName: string | null
   branch: string | null
   accountNumber: string | null
-};
+}
 
 export const profitSummarySchema = z.array(
   z.object({
@@ -392,17 +394,19 @@ export const profitSummarySchema = z.array(
     total_sales_amount: z.number(),
     net_profit: z.number(),
   })
-);
+)
 export type GetProfitSummary = z.infer<typeof profitSummarySchema>
 
 export const bankAccountBalanceSummarySchema = z.array(
   z.object({
     id: z.number().int(),
     bank_name: z.string(),
-    current_balance: z.number()
+    current_balance: z.number(),
   })
 )
-export type GetBankAccountBalanceSummary = z.infer<typeof bankAccountBalanceSummarySchema>
+export type GetBankAccountBalanceSummary = z.infer<
+  typeof bankAccountBalanceSummarySchema
+>
 
 export const wastageSchema = z.object({
   wastageId: z.number().optional(),
@@ -410,16 +414,15 @@ export const wastageSchema = z.object({
   quantity: z.number(),
   sellPrice: z.number(),
   netPrice: z.number(),
-  wastageDate: z.string().refine(
-    (val) => !isNaN(Date.parse(val)),
-    "Invalid date format"
-  ),
+  wastageDate: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), 'Invalid date format'),
   notes: z.string(),
   createdBy: z.number(),
   createdAt: z.string().optional(), // handled automatically by DB
   updatedBy: z.number().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
-});
+})
 export type CreateWastageType = z.infer<typeof wastageSchema>
 export type GetWastageType = z.infer<typeof wastageSchema> & {
   itemName: string
@@ -444,7 +447,7 @@ export type GetStockAdjustmentType = z.infer<typeof stockAdjustmentSchema> & {
 export const loanSchema = z.object({
   loanId: z.number().optional(), // auto-increment
   uniqueName: z.string().max(255),
-  vendorId: z.number().nullable().optional(), 
+  vendorId: z.number().nullable().optional(),
   loanDate: z.string().date().or(z.string()),
   loanAmountReceivable: z.number(),
   remarks: z.string().nullable().optional(),
@@ -452,11 +455,20 @@ export const loanSchema = z.object({
   createdAt: z.date().optional(),
   updatedBy: z.number().nullable().optional(),
   updatedAt: z.date().nullable().optional(),
-});
+})
 export type CreateLoanType = z.infer<typeof loanSchema>
 export type GetLoanType = z.infer<typeof loanSchema> & {
   vendorName: string
 }
+
+export const LoanReportSchema = z.object({
+  id: z.number().optional(),
+  date: z.string().date().or(z.string()),
+  type: z.string(),
+  amount: z.number(),
+  remarks: z.string(),
+})
+export type GetLoanReportType = z.infer<typeof LoanReportSchema>
 
 export interface User {
   userId: number

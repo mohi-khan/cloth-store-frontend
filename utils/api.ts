@@ -40,6 +40,7 @@ import {
   GetStockAdjustmentType,
   CreateLoanType,
   GetLoanType,
+  GetLoanReportType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -567,6 +568,20 @@ export async function getStockLedger(
 ) {
   return fetchApi<GetStockLedgerType[]>({
     url: `api/report/stock-ledger?startDate=${startDate}&endDate=${endDate}&itemId=${itemId}`,
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getLoanReport(
+  unique_name: string,
+  token: string
+) {
+  return fetchApi<GetLoanReportType[]>({
+    url: `api/report/loan-report?unique_name=${unique_name}`,
     method: 'GET',
     headers: {
       Authorization: token,
