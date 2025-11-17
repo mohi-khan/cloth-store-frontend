@@ -392,6 +392,8 @@ export const profitSummarySchema = z.array(
     month: z.string(),
     number_of_sales: z.number().int(),
     total_sales_amount: z.number(),
+    total_expense: z.number(),
+    gross_profit: z.number(),
     net_profit: z.number(),
   })
 )
@@ -469,6 +471,13 @@ export const LoanReportSchema = z.object({
   remarks: z.string(),
 })
 export type GetLoanReportType = z.infer<typeof LoanReportSchema>
+
+export const purchaseSummarySchema = z.object({
+  id: z.number(),
+  month: z.string(),
+  totalAmount: z.number(),
+});
+export type GetPurchaseSummaryType = z.infer<typeof purchaseSummarySchema>;
 
 export interface User {
   userId: number

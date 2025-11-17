@@ -31,6 +31,7 @@ import {
   useGetCashInHand,
   useGetProfitSummary,
   useGetBankAccountBalanceSummary,
+  useGetPurchaseSummary,
 } from '@/hooks/use-api'
 import { Popup } from '@/utils/popup'
 import {
@@ -41,6 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { GetPurchaseSummaryType } from '@/utils/type'
 
 const DashboardOverview = () => {
   useInitializeUser()
@@ -48,7 +50,6 @@ const DashboardOverview = () => {
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
-  const [currentDate, setCurrentDate] = useState(new Date())
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean
@@ -71,6 +72,8 @@ const DashboardOverview = () => {
   console.log('🚀 ~ DashboardOverview ~ cashInHand:', cashInHand)
   const { data: profitSummary } = useGetProfitSummary()
   console.log('🚀 ~ DashboardOverview ~ profitSummary:', profitSummary)
+  const { data: purchaseSummary } = useGetPurchaseSummary()
+  console.log('🚀 ~ DashboardOverview ~ purchaseSummary:', purchaseSummary)
   const { data: bankBalanceSummary } = useGetBankAccountBalanceSummary()
 
   const totalAmount = InventoryItems?.data?.reduce((sum: number, item: any) => {
@@ -78,16 +81,25 @@ const DashboardOverview = () => {
     return sum + qty * item.price
   }, 0)
 
+  const totalPurchaseAmount = purchaseSummary?.data?.reduce(
+    (sum: number, purchase: any) => {
+      return sum + (purchase.totalAmount || 0)
+    },
+    0
+  )
+
   const totalUnpaidAmount = customerPaymentDetails?.data?.reduce(
     (sum: number, item: any) => {
       return sum + (item.unpaid_amount || 0)
     },
     0
   )
+  console.log('🚀 ~ DashboardOverview ~ totalUnpaidAmount:', totalUnpaidAmount)
 
   const totalCashInHand = cashInHand?.data?.reduce((sum: number, item: any) => {
     return sum + (item.amount || 0)
   }, 0)
+  console.log('🚀 ~ DashboardOverview ~ totalCashInHand:', totalCashInHand)
 
   useEffect(() => {
     const checkUserData = () => {
@@ -105,18 +117,6 @@ const DashboardOverview = () => {
     checkUserData()
   }, [userData, token, router])
 
-  const staticModalData = {
-    'claim-month': [
-      { description: 'Claim 001', amount: 15000 },
-      { description: 'Claim 002', amount: 8500 },
-      { description: 'Claim 003', amount: 12000 },
-    ],
-    purchases: [
-      { itemName: 'Office Supplies', quantity: 150, totalAmount: 45000 },
-      { itemName: 'Equipment', quantity: 25, totalAmount: 75000 },
-    ],
-  }
-
   const openModal = (
     type: 'inventory' | 'customer-payment' | 'claim-month' | 'purchases'
   ) => {
@@ -124,7 +124,7 @@ const DashboardOverview = () => {
       inventory: 'Total Inventory Items',
       'customer-payment': 'Customer Payment Details',
       'claim-month': "This Month's Claims",
-      purchases: 'Fiscal Year Purchases',
+      purchases: 'Purchase Summary',
     }
     setModalState({
       isOpen: true,
@@ -143,17 +143,13 @@ const DashboardOverview = () => {
       value: totalAmount || 0,
       icon: Settings,
       color: 'bg-yellow-500',
-      trend: '+12%',
-      trendUp: true,
       onClick: () => openModal('inventory'),
     },
     {
-      title: 'Total Unpaid Amount',
+      title: 'Total Outstanding Balance',
       value: totalUnpaidAmount || 0,
       icon: BarChart3,
       color: 'bg-emerald-500',
-      trend: '+8.2%',
-      trendUp: true,
       onClick: () => openModal('customer-payment'),
     },
     {
@@ -161,133 +157,18 @@ const DashboardOverview = () => {
       value: totalCashInHand || 0,
       icon: Wallet,
       color: 'bg-red-500',
-      trend: '+5.1%',
-      trendUp: true,
       onClick: undefined,
     },
     {
-      title: 'Fiscal Year Purchases',
-      value: '120,000',
-      subtitle: '24 Claims',
+      title: 'Purchase Summary',
+      value: totalPurchaseAmount,
       icon: ShoppingCart,
       color: 'bg-purple-500',
-      trend: '+15.3%',
-      trendUp: true,
       onClick: () => openModal('purchases'),
     },
+    ,
+    ,
   ]
-
-  const monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ]
-
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
-  }
-
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
-  }
-
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate((prev) => {
-      const newDate = new Date(prev)
-      if (direction === 'prev') {
-        newDate.setMonth(prev.getMonth() - 1)
-      } else {
-        newDate.setMonth(prev.getMonth() + 1)
-      }
-      return newDate
-    })
-  }
-
-  const renderCalendar = () => {
-    const daysInMonth = getDaysInMonth(currentDate)
-    const firstDay = getFirstDayOfMonth(currentDate)
-    const today = new Date()
-    const isCurrentMonth =
-      currentDate.getMonth() === today.getMonth() &&
-      currentDate.getFullYear() === today.getFullYear()
-
-    const days = []
-
-    const prevMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() - 1,
-      0
-    )
-    const prevMonthDays = prevMonth.getDate()
-
-    for (let i = firstDay - 1; i >= 0; i--) {
-      days.push(
-        <div
-          key={`prev-${prevMonthDays - i}`}
-          className="text-center p-2 text-sm text-gray-400"
-        >
-          {prevMonthDays - i}
-        </div>
-      )
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isToday = isCurrentMonth && day === today.getDate()
-      days.push(
-        <div
-          key={day}
-          className={`text-center p-2 text-sm cursor-pointer rounded-md transition-colors ${
-            isToday
-              ? 'bg-yellow-500 text-white font-semibold'
-              : 'hover:bg-gray-100'
-          }`}
-        >
-          {day}
-        </div>
-      )
-    }
-
-    const remainingCells = 42 - days.length
-    for (let day = 1; day <= remainingCells; day++) {
-      days.push(
-        <div
-          key={`next-${day}`}
-          className="text-center p-2 text-sm text-gray-400"
-        >
-          {day}
-        </div>
-      )
-    }
-
-    return days
-  }
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload
-      return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
-          <p className="font-semibold">{data.name}</p>
-          <p className="text-sm text-gray-600">
-            Value: {data.value.toLocaleString()}
-          </p>
-          <p className="text-sm text-gray-600">
-            Percentage: {data.percentage}%
-          </p>
-        </div>
-      )
-    }
-    return null
-  }
 
   const renderModalContent = () => {
     switch (modalState.type) {
@@ -371,7 +252,9 @@ const DashboardOverview = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Customer Name</TableHead>
-                    <TableHead className="text-right">Opening Balance</TableHead>
+                    <TableHead className="text-right">
+                      Opening Balance
+                    </TableHead>
                     <TableHead className="text-right">Total Sales</TableHead>
                     <TableHead className="text-right">Total Discount</TableHead>
                     <TableHead className="text-right">Total Received</TableHead>
@@ -450,59 +333,30 @@ const DashboardOverview = () => {
           </div>
         )
 
-      case 'claim-month':
-        return (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Claim Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {staticModalData['claim-month'].map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {item.amount.toLocaleString('th-TH', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )
-
       case 'purchases':
         return (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Item Name</TableHead>
-                  <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead>Month</TableHead>
                   <TableHead className="text-right">Total Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staticModalData.purchases.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.itemName}</TableCell>
-                    <TableCell className="text-right">
-                      {item.quantity}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {item.totalAmount.toLocaleString('th-TH', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {purchaseSummary?.data?.map(
+                  (item: GetPurchaseSummaryType, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.month}</TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {item.totalAmount.toLocaleString('th-TH', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
               </TableBody>
             </Table>
           </div>
@@ -536,63 +390,70 @@ const DashboardOverview = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">
-            Claim management & statistics overview
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-            <TrendingUp className="h-4 w-4" />
-            <span className="font-medium">All metrics trending up</span>
-          </div>
         </div>
       </div>
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric, index) => (
-          <Card
-            key={index}
-            className={`hover:shadow-lg transition-shadow duration-200 ${metric.onClick ? 'cursor-pointer' : ''}`}
-            onClick={metric.onClick}
-          >
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600 mb-1">
-                    {metric.title}
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 mb-1">
-                    {typeof metric.value === 'number'
-                      ? metric.value.toLocaleString('th-TH', {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        })
-                      : metric.value}
-                  </p>
-                  {metric.subtitle && (
-                    <p className="text-sm text-gray-500">{metric.subtitle}</p>
-                  )}
-                  <div
-                    className={`flex items-center gap-1 text-xs mt-2 ${
-                      metric.trendUp ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    <TrendingUp
-                      className={`h-3 w-3 ${!metric.trendUp ? 'rotate-180' : ''}`}
-                    />
-                    <span>{metric.trend}</span>
+        {metrics.map((metric, index) => {
+          let displayValue = metric?.value
+          let valueColor = 'text-gray-900'
+
+          // Only modify Total Outstanding Balance and Cash In Hand
+          if (
+            metric?.title === 'Total Outstanding Balance' ||
+            metric?.title === 'Cash In Hand'
+          ) {
+            if (typeof metric?.value === 'number') {
+              displayValue = Math.abs(metric?.value) // remove minus sign
+
+              if (metric?.title === 'Total Outstanding Balance') {
+                // negative => green, positive => red
+                valueColor =
+                  metric?.value < 0 ? 'text-emerald-600' : 'text-red-600'
+              }
+
+              if (metric?.title === 'Cash In Hand') {
+                // negative => red, positive => green
+                valueColor =
+                  metric?.value < 0 ? 'text-red-600' : 'text-emerald-600'
+              }
+            }
+          }
+
+          return (
+            <Card
+              key={index}
+              className={`hover:shadow-lg transition-shadow duration-200 ${
+                metric?.onClick ? 'cursor-pointer' : ''
+              }`}
+              onClick={metric?.onClick}
+            >
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      {metric?.title}
+                    </p>
+                    <p className={`text-2xl font-bold mb-1 ${valueColor}`}>
+                      {typeof displayValue === 'number'
+                        ? displayValue.toLocaleString('th-TH', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          })
+                        : displayValue}
+                    </p>
+                  </div>
+                  <div className={`${metric?.color} p-3 rounded-xl shadow-sm`}>
+                    {metric?.icon && (
+                      <metric.icon className="h-6 w-6 text-white" />
+                    )}
                   </div>
                 </div>
-                <div className={`${metric.color} p-3 rounded-xl shadow-sm`}>
-                  {metric.icon && (
-                    <metric.icon className="h-6 w-6 text-white" />
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
       {/* profit summary and bank balance summary */}
@@ -617,6 +478,7 @@ const DashboardOverview = () => {
                       stroke="#e5e7eb"
                       vertical={false}
                     />
+
                     <XAxis
                       dataKey="month"
                       angle={-45}
@@ -624,14 +486,16 @@ const DashboardOverview = () => {
                       height={80}
                       tick={{ fontSize: 12, fill: '#6b7280' }}
                     />
+
                     <YAxis
                       tick={{ fontSize: 12, fill: '#6b7280' }}
                       axisLine={false}
                       tickLine={false}
                     />
+
                     <Tooltip
                       formatter={(value: number) =>
-                        value.toLocaleString('th-TH', {
+                        value.toLocaleString('en-US', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })
@@ -644,11 +508,14 @@ const DashboardOverview = () => {
                       }}
                       cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
                     />
+
                     <Legend
                       wrapperStyle={{ paddingTop: '20px' }}
                       iconType="line"
                     />
-                    <Line
+
+                    {/* Total Sales */}
+                    {/* <Line
                       type="monotone"
                       dataKey="total_sales_amount"
                       stroke="#1e40af"
@@ -656,8 +523,31 @@ const DashboardOverview = () => {
                       strokeWidth={2.5}
                       dot={{ fill: '#1e40af', r: 4, strokeWidth: 0 }}
                       activeDot={{ r: 6 }}
-                      isAnimationActive={true}
+                    /> */}
+
+                    {/* Total Expenses */}
+                    <Line
+                      type="monotone"
+                      dataKey="total_expense"
+                      stroke="#dc2626"
+                      name="Total Expense"
+                      strokeWidth={2.5}
+                      dot={{ fill: '#dc2626', r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
                     />
+
+                    {/* Gross Profit */}
+                    <Line
+                      type="monotone"
+                      dataKey="gross_profit"
+                      stroke="#d97706"
+                      name="Gross Profit"
+                      strokeWidth={2.5}
+                      dot={{ fill: '#d97706', r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
+                    />
+
+                    {/* Net Profit */}
                     <Line
                       type="monotone"
                       dataKey="net_profit"
@@ -666,7 +556,6 @@ const DashboardOverview = () => {
                       strokeWidth={2.5}
                       dot={{ fill: '#059669', r: 4, strokeWidth: 0 }}
                       activeDot={{ r: 6 }}
-                      isAnimationActive={true}
                     />
                   </LineChart>
                 </ResponsiveContainer>
