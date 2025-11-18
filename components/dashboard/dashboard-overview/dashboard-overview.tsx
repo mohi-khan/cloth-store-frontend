@@ -53,7 +53,7 @@ const DashboardOverview = () => {
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean
-    type: 'inventory' | 'customer-payment' | 'claim-month' | 'purchases' | null
+    type: 'inventory' | 'customer-payment' | 'purchases' | null
     title: string
   }>({
     isOpen: false,
@@ -118,12 +118,11 @@ const DashboardOverview = () => {
   }, [userData, token, router])
 
   const openModal = (
-    type: 'inventory' | 'customer-payment' | 'claim-month' | 'purchases'
+    type: 'inventory' | 'customer-payment' | 'purchases'
   ) => {
     const titles = {
       inventory: 'Total Inventory Items',
       'customer-payment': 'Customer Payment Details',
-      'claim-month': "This Month's Claims",
       purchases: 'Purchase Summary',
     }
     setModalState({
