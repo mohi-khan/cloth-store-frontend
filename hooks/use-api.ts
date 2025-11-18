@@ -47,6 +47,7 @@ import {
   getLoanReport,
   getPartyReport,
   getProfitSummary,
+  getPurchaseSummary,
   getStockLedger,
 } from '@/utils/api'
 import type {
@@ -900,6 +901,23 @@ export const useGetProfitSummary = () => {
         throw new Error('Token not found')
       }
       return getProfitSummary(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetPurchaseSummary = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['purchaseSummary'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getPurchaseSummary(token)
     },
     enabled: !!token,
     select: (data) => data,

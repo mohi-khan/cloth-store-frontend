@@ -41,6 +41,7 @@ import {
   CreateLoanType,
   GetLoanType,
   GetLoanReportType,
+  GetPurchaseSummaryType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -442,6 +443,17 @@ export async function getAllCashInHand(token: string) {
 export async function getProfitSummary(token: string) {
   return fetchApi<GetProfitSummary[]>({
     url: 'api/dashboard/profit-summary',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getPurchaseSummary(token: string) {
+  return fetchApi<GetPurchaseSummaryType[]>({
+    url: 'api/dashboard/purchase-summary',
     method: 'GET',
     headers: {
       Authorization: token,
