@@ -33,7 +33,7 @@ import { Popup } from '@/utils/popup'
 import type { CreateTransactionType, GetTransactionType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import {
   useAddTransaction,
   useGetBankAccounts,
@@ -368,7 +368,7 @@ const Transactions = () => {
                   </TableCell>
                   <TableCell>{transaction.vendorName || '-'}</TableCell>
                   <TableCell>{transaction.customerName || '-'}</TableCell>
-                  <TableCell>{transaction.amount?.toFixed(2)}</TableCell>
+                  <TableCell>{formatNumber(transaction.amount?.toFixed(2))}</TableCell>
                   <TableCell>
                     {transaction.isCash === true ? 'Cash' : 'Bank'}
                   </TableCell>

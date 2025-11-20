@@ -25,7 +25,7 @@ import { Popup } from '@/utils/popup'
 import type { GetSortingType, GetPurchaseType, GetItemType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import {
   useGetPurchases,
   useGetItems,
@@ -646,8 +646,8 @@ const Sortings = () => {
                 <TableRow key={purchase.purchaseId}>
                   <TableCell>{purchase.itemName}</TableCell>
                   <TableCell>{purchase.vendorName}</TableCell>
-                  <TableCell>{purchase.totalQuantity}</TableCell>
-                  <TableCell>{purchase.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell>{formatNumber(purchase.totalQuantity)}</TableCell>
+                  <TableCell>{formatNumber(purchase.totalAmount.toFixed(2))}</TableCell>
                   <TableCell>{formatDate(purchase.purchaseDate)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
@@ -779,7 +779,7 @@ const Sortings = () => {
                       >
                         <TableCell>{sorting.itemName}</TableCell>
                         <TableCell>{sorting.vendorName}</TableCell>
-                        <TableCell>{sorting.totalQuantity}</TableCell>
+                        <TableCell>{formatNumber(sorting.totalQuantity)}</TableCell>
                         <TableCell className="capitalize">
                           {sorting.paymentType}
                         </TableCell>

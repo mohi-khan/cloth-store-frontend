@@ -13,13 +13,13 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import formatDate from '@/utils/formatDate'
 import { File, FileSpreadsheet } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import { useGetCashReport } from '@/hooks/use-api'
+import { formatDate, formatNumber } from '@/utils/conversions'
 
 const CashReport = () => {
   const [fromDate, setFromDate] = useState('')
@@ -28,6 +28,7 @@ const CashReport = () => {
   const [loading, setLoading] = useState(false)
 
   const { data: cashReports } = useGetCashReport(fromDate, toDate)
+  console.log('🚀 ~ CashReport ~ cashReports:', cashReports)
 
   // const sortedCashReports = useMemo(() => {
   //   if (!cashReports?.data) return []
@@ -277,14 +278,15 @@ const CashReport = () => {
                         <TableCell>{report.particular}</TableCell>
                         <TableCell
                           className={
-                            report.amount < 0 || report.particular?.includes('Payment')
+                            report.amount < 0 ||
+                            report.particular?.includes('Payment')
                               ? 'text-red-600'
                               : 'text-green-600'
                           }
                         >
                           {report.particular?.includes('Payment')
-                            ? -report.amount
-                            : report.amount}
+                            ? formatNumber(-Number(report.amount))
+                            : formatNumber(Number(report.amount))}
                         </TableCell>
                       </TableRow>
                     ))}

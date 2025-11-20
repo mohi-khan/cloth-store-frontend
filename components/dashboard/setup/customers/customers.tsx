@@ -31,7 +31,7 @@ import {
   useAddCustomer,
   useEditCustomer,
 } from '@/hooks/use-api'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import type { CreateCustomerType, GetCustomerType } from '@/utils/type'
 
 const Customers = () => {
@@ -338,7 +338,7 @@ const Customers = () => {
                   <TableCell>{customer.phone}</TableCell>
                   <TableCell>{customer.email}</TableCell>
                   <TableCell>{customer.address}</TableCell>
-                  <TableCell>{customer.balance}</TableCell>
+                  <TableCell>{formatNumber(customer.balance)}</TableCell>
                   <TableCell>{formatDate(customer.createdAt)}</TableCell>
                   <TableCell>
                     <Button

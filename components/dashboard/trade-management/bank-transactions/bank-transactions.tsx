@@ -33,7 +33,7 @@ import { Popup } from '@/utils/popup'
 import type { CreateTransactionType, GetTransactionType } from '@/utils/type'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import {
   useGetTransactions,
   useAddTransaction,
@@ -401,7 +401,7 @@ const BankTransactions = () => {
                       : '-'}
                   </TableCell>
                   <TableCell className="font-semibold">
-                    {t.amount?.toFixed(2)}
+                    {formatNumber(t.amount)}
                   </TableCell>
                   <TableCell className="font-semibold">
                     {t.bankId && t.amount!==null && t.amount > 0 ? 'Deposit' : 'Withdraw'}

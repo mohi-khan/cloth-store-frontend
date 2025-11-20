@@ -21,19 +21,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { DialogFooter } from '@/components/ui/dialog'
 import { ArrowUpDown, Search, Trash2 } from 'lucide-react'
 import type { CreateWastageType, GetWastageType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import { useAddWastage, useGetItems, useGetWastages } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { Popup } from '@/utils/popup'
@@ -288,9 +282,13 @@ const Wastages = () => {
               paginatedWastages.map((wastage) => (
                 <TableRow key={wastage.wastageId}>
                   <TableCell>{wastage.itemName}</TableCell>
-                  <TableCell>{wastage.quantity}</TableCell>
-                  <TableCell>{wastage.sellPrice.toFixed(2)}</TableCell>
-                  <TableCell>{wastage.netPrice.toFixed(2)}</TableCell>
+                  <TableCell>{formatNumber(wastage.quantity)}</TableCell>
+                  <TableCell>
+                    {formatNumber(wastage.sellPrice.toFixed(2))}
+                  </TableCell>
+                  <TableCell>
+                    {formatNumber(wastage.netPrice.toFixed(2))}
+                  </TableCell>
                   <TableCell>
                     {formatDate(new Date(wastage.wastageDate))}
                   </TableCell>

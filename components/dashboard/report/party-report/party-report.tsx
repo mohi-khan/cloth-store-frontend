@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import { File, FileSpreadsheet } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
@@ -304,7 +304,7 @@ const PartyReport = () => {
                           {formatDate(new Date(report.date))}
                         </TableCell>
                         <TableCell>{report.particular}</TableCell>
-                        <TableCell>{report.amount}</TableCell>
+                        <TableCell>{formatNumber(report.amount)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

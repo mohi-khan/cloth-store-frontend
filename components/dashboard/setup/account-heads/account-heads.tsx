@@ -20,7 +20,7 @@ import type { CreateAccountHeadType, GetAccountHeadType } from "@/utils/type"
 import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
 import { useAtom } from "jotai"
 import { useRouter } from "next/navigation"
-import formatDate from "@/utils/formatDate"
+import { formatDate } from '@/utils/conversions'
 import { useAddAccountHead, useGetAccountHeads } from "@/hooks/use-api"
 
 const AccountHeads = () => {

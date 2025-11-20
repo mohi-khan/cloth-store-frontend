@@ -27,7 +27,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { useGetVendors, useAddVendor, useEditVendor } from '@/hooks/use-api'
-import formatDate from '@/utils/formatDate'
+import { formatDate } from '@/utils/conversions'
 import type { CreateVendorType, GetVendorType } from '@/utils/type'
 import { Checkbox } from '@/components/ui/checkbox'
 

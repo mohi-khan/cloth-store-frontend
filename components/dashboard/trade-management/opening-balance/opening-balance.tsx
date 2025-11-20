@@ -30,7 +30,7 @@ import type {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import {
   useAddOpeningBalance,
   useGetBankAccounts,
@@ -330,7 +330,7 @@ const OpeningBalance = () => {
                       ? `${balance.bankName} - ${balance.accountNumber} - ${balance.bankAccountId}`
                       : '-'}
                   </TableCell>
-                  <TableCell>{balance.openingAmount.toFixed(2)}</TableCell>
+                  <TableCell>{formatNumber(balance.openingAmount)}</TableCell>
                   <TableCell>
                     {formatDate(new Date(balance.createdAt))}
                   </TableCell>

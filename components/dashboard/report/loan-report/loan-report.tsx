@@ -12,7 +12,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import { File, FileSpreadsheet } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
@@ -270,7 +270,7 @@ const LoanReport = () => {
                           {formatDate(new Date(report.date))}
                         </TableCell>
                         <TableCell>{report.type}</TableCell>
-                        <TableCell>{report.amount}</TableCell>
+                        <TableCell>{formatNumber(report.amount)}</TableCell>
                         <TableCell>{report.remarks}</TableCell>
                       </TableRow>
                     ))}

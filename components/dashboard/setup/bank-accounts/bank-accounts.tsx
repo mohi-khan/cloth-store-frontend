@@ -31,7 +31,7 @@ import {
   useAddBankAccount,
   useEditBankAccount,
 } from '@/hooks/use-api'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import type { CreateBankAccountType, GetBankAccountType } from '@/utils/type'
 
 const BankAccounts = () => {
@@ -341,7 +341,7 @@ const BankAccounts = () => {
                   <TableCell>{account.accountNumber}</TableCell>
                   <TableCell>{account.accountName}</TableCell>
                   <TableCell>{account.branch}</TableCell>
-                  <TableCell>{account.balance}</TableCell>
+                  <TableCell>{formatNumber(account.balance)}</TableCell>
                   <TableCell>{formatDate(account.createdAt)}</TableCell>
                   <TableCell>
                     <Button
