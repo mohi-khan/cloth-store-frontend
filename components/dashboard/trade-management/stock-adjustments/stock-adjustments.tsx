@@ -30,7 +30,7 @@ import type {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import {
   useAddStockAdjustment,
   useGetStockAdjustments,
@@ -262,7 +262,7 @@ const StockAdjustment = () => {
                 <TableRow key={adjustment.adjustmentId}>
                   <TableCell>{adjustment.prevItemName || '-'}</TableCell>
                   <TableCell>{adjustment.newItemName || '-'}</TableCell>
-                  <TableCell>{adjustment.quantity}</TableCell>
+                  <TableCell>{formatNumber(adjustment.quantity)}</TableCell>
                   <TableCell>
                     {adjustment.createdAt
                       ? formatDate(new Date(adjustment.createdAt))

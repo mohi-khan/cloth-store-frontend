@@ -126,7 +126,7 @@ export const SaleDetailRow: React.FC<SaleDetailRowProps> = ({
         />
       </TableCell>
       <TableCell>
-        <span className="font-semibold">{detail.amount.toFixed(2)}</span>
+        <span className="font-semibold">{Math.round(Number(detail.amount))}</span>
       </TableCell>
       <TableCell>
         {saleDetailsLength > 1 && (

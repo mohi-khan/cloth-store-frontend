@@ -35,7 +35,7 @@ import type { CreateExpenseType, GetExpenseType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import {
   useAddExpense,
   useGetBankAccounts,
@@ -322,7 +322,7 @@ const Expenses = () => {
               paginatedExpenses.map((expense) => (
                 <TableRow key={expense.expenseId}>
                   <TableCell>{expense.accountHeadName}</TableCell>
-                  <TableCell>{expense.amount.toFixed(2)}</TableCell>
+                  <TableCell>{formatNumber(expense.amount.toFixed(2))}</TableCell>
                   <TableCell>{formatDate(expense.expenseDate)}</TableCell>
                   <TableCell className="capitalize">
                     {expense.paymentType}

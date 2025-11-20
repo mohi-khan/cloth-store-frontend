@@ -28,7 +28,7 @@ import type { CreateLoanType, GetLoanType, GetVendorType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import { useAddLoan, useGetLoans, useGetVendors } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
@@ -274,7 +274,7 @@ const Loans = () => {
                 <TableRow key={loan.loanId}>
                   <TableCell>{loan.uniqueName}</TableCell>
                   <TableCell>{loan.vendorName || '-'}</TableCell>
-                  <TableCell>{loan.loanAmountReceivable.toFixed(2)}</TableCell>
+                  <TableCell>{formatNumber(loan.loanAmountReceivable.toFixed(2))}</TableCell>
                   <TableCell>{formatDate(new Date(loan.loanDate))}</TableCell>
                   <TableCell>{loan.remarks || '-'}</TableCell>
                 </TableRow>

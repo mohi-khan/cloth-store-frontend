@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import { File, FileSpreadsheet } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
@@ -311,8 +311,8 @@ const StockLedger = () => {
                             : 'N/A'}
                         </TableCell>
                         <TableCell>{ledger.reference_type}</TableCell>
-                        <TableCell>{ledger.quantity || 0}</TableCell>
-                        <TableCell>{ledger.balance || 0}</TableCell>
+                        <TableCell>{formatNumber(ledger.quantity) || 0}</TableCell>
+                        <TableCell>{formatNumber(ledger.balance) || 0}</TableCell>
                         <TableCell>{ledger.reference || 0}</TableCell>
                       </TableRow>
                     ))}

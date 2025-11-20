@@ -27,9 +27,9 @@ import type { CreateItemType, GetItemType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import formatDate from '@/utils/formatDate'
 import { useAddItem, useGetItems } from '@/hooks/use-api'
 import { Checkbox } from '@/components/ui/checkbox'
+import { formatDate, formatNumber } from '@/utils/conversions'
 
 const Items = () => {
   useInitializeUser()
@@ -263,7 +263,7 @@ const Items = () => {
               paginatedItems.map((item) => (
                 <TableRow key={item.itemId}>
                   <TableCell>{item.itemName}</TableCell>
-                  <TableCell>{item.sellPrice.toFixed(2)}</TableCell>
+                  <TableCell>{formatNumber(String(item.sellPrice.toFixed(2)))}</TableCell>
                   <TableCell>{item.isBulk === true ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{formatDate(item.createdAt)}</TableCell>
                 </TableRow>

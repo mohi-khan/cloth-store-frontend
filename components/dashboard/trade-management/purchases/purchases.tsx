@@ -39,7 +39,7 @@ import type {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import formatDate from '@/utils/formatDate'
+import { formatDate, formatNumber } from '@/utils/conversions'
 import {
   useAddPurchase,
   useGetBankAccounts,
@@ -329,8 +329,8 @@ const Purchases = () => {
                 <TableRow key={purchase.purchaseId}>
                   <TableCell>{purchase.itemName}</TableCell>
                   <TableCell>{purchase.vendorName}</TableCell>
-                  <TableCell>{purchase.totalQuantity}</TableCell>
-                  <TableCell>{purchase.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell>{formatNumber(purchase.totalQuantity)}</TableCell>
+                  <TableCell>{formatNumber(purchase.totalAmount.toFixed(2))}</TableCell>
                   <TableCell className="capitalize">
                     {purchase.paymentType}
                   </TableCell>

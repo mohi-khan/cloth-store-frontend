@@ -27,7 +27,6 @@ import { Popup } from '@/utils/popup'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import formatDate from '@/utils/formatDate'
 import {
   useAddSale,
   useGetBankAccounts,
@@ -48,6 +47,7 @@ import type {
 import { SaleDetailRow } from './sale-details-row'
 import { toast } from '@/hooks/use-toast'
 import { getAvailableItem } from '@/utils/api'
+import { formatDate, formatNumber } from '@/utils/conversions'
 
 const Sales = () => {
   useInitializeUser()
@@ -484,7 +484,7 @@ const Sales = () => {
           itemId: detail.itemId,
           quantity: detail.quantity,
           unitPrice: detail.unitPrice,
-          amount: detail.amount,
+          amount: Math.round(Number(detail.amount)),
           saleMasterId: formData.salesMaster.saleMasterId,
           createdBy: userData?.userId || 0,
           ...(detail.saleDetailsId && { saleDetailsId: detail.saleDetailsId }),
@@ -690,9 +690,9 @@ const Sales = () => {
                   <TableCell>
                     {(sale.salesMaster as any)?.customerName ?? '-'}
                   </TableCell>
-                  <TableCell>{sale.salesMaster?.totalQuantity ?? 0}</TableCell>
+                  <TableCell>{formatNumber(sale.salesMaster?.totalQuantity) ?? 0}</TableCell>
                   <TableCell>
-                    {(sale.salesMaster?.totalAmount ?? 0).toFixed(2)}
+                    {formatNumber((sale.salesMaster?.totalAmount) ?? 0)}
                   </TableCell>
                   <TableCell className="capitalize">
                     {sale.salesMaster?.paymentType ?? '-'}
