@@ -27,7 +27,7 @@ import type { CreateItemType, GetItemType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import { useAddItem, useGetItems } from '@/hooks/use-api'
+import { useAddItem, useGetItems, useEditItem } from '@/hooks/use-api'
 import { Checkbox } from '@/components/ui/checkbox'
 import { formatDate, formatNumber } from '@/utils/conversions'
 
@@ -44,6 +44,8 @@ const Items = () => {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingItem, setEditingItem] = useState<GetItemType | null>(null)
   const [sortColumn, setSortColumn] = useState<keyof GetItemType>('itemName')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [searchTerm, setSearchTerm] = useState('')
@@ -68,14 +70,21 @@ const Items = () => {
   const [formData, setFormData] = useState<CreateItemType>({
     itemName: '',
     sellPrice: 0,
+    avgPrice: 0,
     isBulk: false,
     createdBy: userData?.userId || 0,
   })
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement> | { target: { name: string; value: boolean } }
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | { target: { name: string; value: boolean } }
   ) => {
-    const { name, value, type } = e.target as { name: string; value: string | boolean; type?: string }
+    const { name, value, type } = e.target as {
+      name: string
+      value: string | boolean
+      type?: string
+    }
 
     if (type === 'number') {
       setFormData((prev) => ({
@@ -95,22 +104,30 @@ const Items = () => {
     }
   }
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       itemName: '',
       sellPrice: 0,
+      avgPrice: 0,
       isBulk: false,
       createdBy: userData?.userId || 0,
     })
     setIsPopupOpen(false)
-  }
+    setIsEditMode(false)
+    setEditingItem(null)
+  }, [userData?.userId])
 
   const closePopup = useCallback(() => {
     setIsPopupOpen(false)
     setError(null)
   }, [])
 
-  const mutation = useAddItem({
+  const addMutation = useAddItem({
+    onClose: closePopup,
+    reset: resetForm,
+  })
+
+  const editMutation = useEditItem({
     onClose: closePopup,
     reset: resetForm,
   })
@@ -163,23 +180,82 @@ const Items = () => {
 
   const totalPages = Math.ceil(sortedItems.length / itemsPerPage)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      setError(null)
 
-    try {
-      mutation.mutate(formData)
-    } catch (err) {
-      setError('Failed to create item')
-      console.error(err)
-    }
+      try {
+        if (isEditMode && editingItem) {
+          if (
+            editingItem?.itemId === undefined ||
+            editingItem?.createdBy === undefined
+          )
+            return
+
+          editMutation.mutate({
+            id: editingItem.itemId,
+            data: {
+              ...formData,
+              itemId: editingItem.itemId,
+              updatedBy: userData?.userId || 0,
+              createdBy: editingItem.createdBy || 0,
+              itemName: formData.itemName,
+              sellPrice: Number(formData.sellPrice),
+              avgPrice: Number(formData.avgPrice),
+              isBulk: formData.isBulk,
+            },
+          })
+        } else {
+          addMutation.mutate({
+            ...formData,
+            sellPrice: Number(formData.sellPrice),
+            avgPrice: Number(formData.avgPrice),
+            createdBy: userData?.userId || 0,
+          })
+        }
+        resetForm()
+      } catch (err) {
+        setError(`Failed to ${isEditMode ? 'update' : 'create'} item`)
+        console.error(err)
+      }
+    },
+    [
+      formData,
+      userData,
+      isEditMode,
+      editingItem,
+      addMutation,
+      editMutation,
+      resetForm,
+    ]
+  )
+
+  const handleEdit = (item: GetItemType) => {
+    setIsEditMode(true)
+    setEditingItem(item)
+    setFormData({
+      itemName: item.itemName,
+      sellPrice: item.sellPrice,
+      avgPrice: item.avgPrice,
+      isBulk: item.isBulk,
+      createdBy: item.createdBy,
+    })
+    setIsPopupOpen(true)
+  }
+
+  const handleAdd = () => {
+    setIsEditMode(false)
+    setEditingItem(null)
+    resetForm()
+    setIsPopupOpen(true)
   }
 
   useEffect(() => {
-    if (mutation.error) {
+    if (addMutation.error) {
       setError('Error adding item')
     }
-  }, [mutation.error])
+  }, [addMutation.error])
 
   return (
     <div className="p-6 space-y-6">
@@ -202,7 +278,7 @@ const Items = () => {
           </div>
           <Button
             className="bg-yellow-400 hover:bg-yellow-500 text-black"
-            onClick={() => setIsPopupOpen(true)}
+            onClick={handleAdd}
           >
             Add
           </Button>
@@ -229,6 +305,12 @@ const Items = () => {
                 onClick={() => handleSort('sellPrice')}
                 className="cursor-pointer"
               >
+                Average Price <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('sellPrice')}
+                className="cursor-pointer"
+              >
                 Bulk Product
                 <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
@@ -238,24 +320,25 @@ const Items = () => {
               >
                 Created At <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
+              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {!items || items.data === undefined ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-4">
+                <TableCell colSpan={6} className="text-center py-4">
                   Loading items...
                 </TableCell>
               </TableRow>
             ) : !items.data || items.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-4">
+                <TableCell colSpan={6} className="text-center py-4">
                   No items found
                 </TableCell>
               </TableRow>
             ) : paginatedItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-4">
+                <TableCell colSpan={6} className="text-center py-4">
                   No items match your search
                 </TableCell>
               </TableRow>
@@ -263,9 +346,23 @@ const Items = () => {
               paginatedItems.map((item) => (
                 <TableRow key={item.itemId}>
                   <TableCell>{item.itemName}</TableCell>
-                  <TableCell>{formatNumber(String(item.sellPrice.toFixed(2)))}</TableCell>
+                  <TableCell>
+                    {formatNumber(String(item.sellPrice.toFixed(2)))}
+                  </TableCell>
+                  <TableCell>
+                    {formatNumber(String(item.avgPrice.toFixed(2)))}
+                  </TableCell>
                   <TableCell>{item.isBulk === true ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{formatDate(item.createdAt)}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(item)}
+                    >
+                      Edit
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -338,7 +435,7 @@ const Items = () => {
       <Popup
         isOpen={isPopupOpen}
         onClose={resetForm}
-        title="Add Item"
+        title={isEditMode ? 'Edit Item' : 'Add Item'}
         size="sm:max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -363,6 +460,20 @@ const Items = () => {
                 step="0.01"
                 min="0.01"
                 value={formData.sellPrice}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="avgPrice">Average Price*</Label>
+              <Input
+                id="avgPrice"
+                name="avgPrice"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={formData.avgPrice}
                 onChange={handleInputChange}
                 required
               />
@@ -393,8 +504,15 @@ const Items = () => {
             <Button type="button" variant="outline" onClick={resetForm}>
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'Saving...' : 'Save'}
+            <Button
+              type="submit"
+              disabled={addMutation.isPending || editMutation.isPending}
+            >
+              {addMutation.isPending || editMutation.isPending
+                ? 'Saving...'
+                : isEditMode
+                  ? 'Update'
+                  : 'Save'}
             </Button>
           </div>
         </form>

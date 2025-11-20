@@ -21,6 +21,7 @@ import {
   editBankAccount,
   editBankTransaction,
   editCustomer,
+  editItem,
   editSale,
   editSorting,
   editVendor,
@@ -69,6 +70,7 @@ import type {
   GetBankAccountType,
   GetBankTransactionType,
   GetCustomerType,
+  GetItemType,
   GetSalesType,
   GetSortingType,
   GetTransactionType,
@@ -139,6 +141,40 @@ export const useAddItem = ({
         variant: 'destructive',
         description: 'Error adding purchase',
       })
+    },
+  })
+
+  return mutation
+}
+
+export const useEditItem = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: GetItemType }) => {
+      return editItem(id, data, token)
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success!',
+        description: 'Item edited successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error editing item:', error)
     },
   })
 

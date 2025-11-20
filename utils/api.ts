@@ -87,6 +87,22 @@ export async function createItem(data: CreateItemType, token: string) {
   })
 }
 
+export async function editItem(
+  id: number,
+  data: GetItemType,
+  token: string
+) {
+  return fetchApi<GetItemType>({
+    url: `api/item/edit/${id}`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 export async function getAllBankAccounts(token: string) {
   return fetchApi<GetBankAccountType[]>({
     url: 'api/bank-account/getAll',
