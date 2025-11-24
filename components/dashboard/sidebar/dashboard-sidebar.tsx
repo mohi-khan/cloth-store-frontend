@@ -137,6 +137,10 @@ export function DashboardSidebar() {
           title: 'Loan Report',
           href: '/dashboard/report/loan-report',
         },
+        {
+          title: 'Invoice',
+          href: '/dashboard/report/invoice',
+        },
       ],
     },
   ]
