@@ -42,7 +42,6 @@ import {
   useGetCustomers,
   useEditSale,
   useDeleteSale,
-  useGetAvailableItem,
 } from '@/hooks/use-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type {
@@ -56,6 +55,7 @@ import { toast } from '@/hooks/use-toast'
 import { getAvailableItem } from '@/utils/api'
 import { formatDate, formatNumber } from '@/utils/conversions'
 import { useReactToPrint } from 'react-to-print'
+import { toWords } from 'number-to-words'
 
 const Sales = () => {
   useInitializeUser()
@@ -63,6 +63,7 @@ const Sales = () => {
   const [token] = useAtom(tokenAtom)
 
   const { data: sales } = useGetSales()
+  console.log('🚀 ~ Sales ~ sales:', sales)
   const { data: rawItems } = useGetItems()
   const items =
     rawItems?.data?.filter((item: GetItemType) => item.isBulk === false) || []
@@ -124,6 +125,9 @@ const Sales = () => {
       rowId: `row-${Date.now()}-0`,
     },
   ])
+
+  const [selectedSaleForPrint, setSelectedSaleForPrint] =
+    useState<GetSalesType | null>(null)
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -590,6 +594,11 @@ const Sales = () => {
     setIsPopupOpen(true)
   }
 
+  const handlePrint = (sale: GetSalesType) => {
+    setSelectedSaleForPrint(sale)
+    reactToPrintFn && reactToPrintFn()
+  }
+
   useEffect(() => {
     if (mutation.error) setError('Error adding sale')
     if (editMutation.error) setError('Error editing sale')
@@ -729,7 +738,13 @@ const Sales = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => reactToPrintFn && reactToPrintFn()}
+                        onClick={() => {
+                          setSelectedSaleForPrint(sale)
+                          setTimeout(
+                            () => reactToPrintFn && reactToPrintFn(),
+                            100
+                          )
+                        }}
                       >
                         <Printer className="h-4 w-4" />
                       </Button>
@@ -1003,7 +1018,10 @@ const Sales = () => {
         </form>
       </Popup>
 
-      <div ref={contentRef} className="w-full max-w-4xl bg-white shadow-lg">
+      <div
+        ref={contentRef}
+        className="hidden print:block w-full max-w-4xl bg-white shadow-lg"
+      >
         {/* Header */}
         <div className="border-b-4 border-amber-300 p-8">
           <div className="flex items-start justify-between mb-6">
@@ -1026,19 +1044,29 @@ const Sales = () => {
           <div>
             <div className="pb-5 flex gap-2 text-sm">
               <span className="text-gray-600">Invoice No:</span>
-              <p className="font-semibold">13</p>
+              <p className="font-semibold">
+                {selectedSaleForPrint?.salesMaster?.saleMasterId || '-'}
+              </p>
             </div>
             <div className="flex text-sm justify-between gap-4 pb-2">
               <div className="flex gap-2 flex-1 min-w-0">
                 <span className="text-gray-600">Name:</span>
                 <p className="font-semibold border-b border-gray-400 flex-1 min-w-0">
-                  Soiod Ikhtiar Uddin Mohammad Bin Bakhtiar Khilji
+                  {(selectedSaleForPrint?.salesMaster as any)?.customerName ||
+                    '-'}
                 </p>
               </div>
               <div className="flex gap-2 min-w-0">
                 <span className="text-gray-600">Date:</span>
                 <p className="font-semibold border-b border-gray-400 min-w-[80px]">
-                  11 Nov 2025
+                  {selectedSaleForPrint?.salesMaster?.saleDate
+                    ? formatDate(
+                        selectedSaleForPrint.salesMaster.saleDate instanceof
+                          Date
+                          ? selectedSaleForPrint.salesMaster.saleDate
+                          : new Date(selectedSaleForPrint.salesMaster.saleDate)
+                      )
+                    : '-'}
                 </p>
               </div>
             </div>
@@ -1047,13 +1075,13 @@ const Sales = () => {
               <div className="flex gap-2 flex-1 min-w-0">
                 <span className="text-gray-600">Address:</span>
                 <p className="font-semibold border-b border-gray-400 flex-1 min-w-0">
-                  B-11 Mahal Market, Laldighi West Side, Chattogram
+                  {(selectedSaleForPrint?.salesMaster as any)?.address}
                 </p>
               </div>
               <div className="flex gap-2 min-w-0">
                 <span className="text-gray-600">Phone:</span>
                 <p className="font-semibold border-b border-gray-400 min-w-[100px]">
-                  +1-234-567-8900
+                  {(selectedSaleForPrint?.salesMaster as any)?.phone}
                 </p>
               </div>
             </div>
@@ -1083,17 +1111,40 @@ const Sales = () => {
               </tr>
             </thead>
             <tbody>
-              {[...Array(10)].map((_, index) => (
-                <tr key={index + 1}>
-                  <td className="border border-gray-300 px-4 py-4 text-center font-semibold text-black">
-                    {index + 1}
-                  </td>
-                  <td className="border border-gray-300 text-black px-4"></td>
-                  <td className="border border-gray-300 text-black px-4"></td>
-                  <td className="border border-gray-300 text-black px-4"></td>
-                  <td className="border border-gray-300 text-black px-4"></td>
-                </tr>
-              ))}
+              {/* Show actual sale details if available */}
+              {selectedSaleForPrint?.saleDetails &&
+              selectedSaleForPrint.saleDetails.length > 0
+                ? selectedSaleForPrint.saleDetails.map((detail, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 px-4 py-4 text-center font-semibold text-black">
+                        {index + 1}
+                      </td>
+                      <td className="border border-gray-300 text-black px-4 py-4">
+                        {(detail as any)?.itemName || '-'}
+                      </td>
+                      <td className="border border-gray-300 text-black px-4 py-4 text-center">
+                        {detail.quantity}
+                      </td>
+                      <td className="border border-gray-300 text-black px-4 py-4 text-center">
+                        {formatNumber(detail.unitPrice)}
+                      </td>
+                      <td className="border border-gray-300 text-black px-4 py-4 text-right">
+                        {formatNumber(detail.amount)}
+                      </td>
+                    </tr>
+                  ))
+                : // Show empty rows if no data
+                  [...Array(5)].map((_, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 px-4 py-4 text-center font-semibold text-black">
+                        {index + 1}
+                      </td>
+                      <td className="border border-gray-300 text-black px-4"></td>
+                      <td className="border border-gray-300 text-black px-4"></td>
+                      <td className="border border-gray-300 text-black px-4"></td>
+                      <td className="border border-gray-300 text-black px-4"></td>
+                    </tr>
+                  ))}
             </tbody>
           </table>
 
@@ -1106,7 +1157,11 @@ const Sales = () => {
               </div>
             </div>
             <div className="border border-gray-300">
-              <div className="px-4 py-2"></div>
+              <div className="px-4 py-2 text-right">
+                {selectedSaleForPrint?.salesMaster?.totalAmount
+                  ? formatNumber(selectedSaleForPrint.salesMaster.totalAmount)
+                  : '-'}
+              </div>
             </div>
           </div>
 
@@ -1118,7 +1173,13 @@ const Sales = () => {
               </div>
             </div>
             <div className="border border-gray-300">
-              <div className="px-4 py-2"></div>
+              <div className="px-4 py-2 text-right">
+                {selectedSaleForPrint?.salesMaster?.discountAmount
+                  ? formatNumber(
+                      selectedSaleForPrint.salesMaster.discountAmount
+                    )
+                  : '0'}
+              </div>
             </div>
           </div>
 
@@ -1128,11 +1189,38 @@ const Sales = () => {
               <div className="px-4 py-2 font-bold text-black">Grand Total</div>
             </div>
             <div className="border-2 border-amber-300">
-              <div className="px-4 py-2 font-bold"></div>
+              <div className="px-4 py-2 font-bold text-right">
+                {selectedSaleForPrint?.salesMaster?.totalAmount &&
+                selectedSaleForPrint?.salesMaster?.discountAmount
+                  ? formatNumber(
+                      selectedSaleForPrint.salesMaster.totalAmount -
+                        selectedSaleForPrint.salesMaster.discountAmount
+                    )
+                  : selectedSaleForPrint?.salesMaster?.totalAmount
+                    ? formatNumber(selectedSaleForPrint.salesMaster.totalAmount)
+                    : '-'}
+              </div>
             </div>
           </div>
           <div className="pt-5">
-            <p>In words:</p>
+            <p>
+              In words:{' '}
+              {toWords(
+                selectedSaleForPrint?.salesMaster
+                  ? selectedSaleForPrint.salesMaster.totalAmount &&
+                    selectedSaleForPrint.salesMaster.discountAmount
+                    ? (
+                        selectedSaleForPrint.salesMaster.totalAmount -
+                          selectedSaleForPrint.salesMaster.discountAmount
+                      )
+                    : selectedSaleForPrint.salesMaster.totalAmount
+                      ? (
+                          selectedSaleForPrint.salesMaster.totalAmount
+                        )
+                      : 0
+                  : 0
+              )}
+            </p>
           </div>
         </div>
 
