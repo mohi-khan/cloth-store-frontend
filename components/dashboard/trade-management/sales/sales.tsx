@@ -1024,22 +1024,6 @@ const Sales = () => {
       >
         {/* Header */}
         <div className="border-b-4 border-amber-300 p-8">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-amber-400 mb-2">
-                COMPANY NAME
-              </h1>
-              <p className="text-sm text-gray-600 max-w-md">
-                We aim to provide the best service in financing and business
-                transactions.
-              </p>
-            </div>
-            <div className="text-right text-xs text-gray-600">
-              <p>Address: B-11 Mahal Market, Laldighi West Side, Chattogram</p>
-              <p>Phone: +1-234-567-8900</p>
-            </div>
-          </div>
-
           {/* Invoice Info */}
           <div>
             <div className="pb-5 flex gap-2 text-sm">

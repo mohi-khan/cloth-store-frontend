@@ -11,6 +11,7 @@ import {
   createOpeningBalance,
   createPurchase,
   createSale,
+  createSalesReturn,
   createSorting,
   createStockAdjustment,
   createTransaction,
@@ -37,6 +38,7 @@ import {
   getAllOpeningBalances,
   getAllPurchases,
   getAllSales,
+  getAllSalesMaster,
   getAllSortings,
   getAllStockAdjustments,
   getAllTransaction,
@@ -49,6 +51,7 @@ import {
   getPartyReport,
   getProfitSummary,
   getPurchaseSummary,
+  getSalesDetailsBySalesMasterId,
   getStockLedger,
 } from '@/utils/api'
 import type {
@@ -61,6 +64,7 @@ import type {
   CreateLoanType,
   CreateOpeningBalanceType,
   CreatePurchaseType,
+  CreateSalesReturnType,
   CreateSalesType,
   CreateSortingType,
   CreateStockAdjustmentType,
@@ -345,6 +349,7 @@ export const useEditVendor = ({
   return mutation
 }
 
+//purchase
 export const useGetPurchases = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
@@ -411,6 +416,7 @@ export const useAddPurchase = ({
   return mutation
 }
 
+//loans
 export const useGetLoans = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
@@ -477,6 +483,7 @@ export const useAddLoan = ({
   return mutation
 }
 
+//sorting
 export const useGetSortings = () => {
   const [token] = useAtom(tokenAtom)
   useInitializeUser()
@@ -806,6 +813,72 @@ export const useDeleteSale = ({
     },
     onError: (error) => {
       console.error('Error deleting sale:', error)
+    },
+  })
+
+  return mutation
+}
+
+//sales-return
+export const useGetSalesMaster = () => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['salesReturn'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Token not found')
+      }
+      return getAllSalesMaster(token)
+    },
+    enabled: !!token,
+    select: (data) => data,
+  })
+}
+
+export const useGetSalesDetailsBySalesMasterId = (id: number) => {
+  const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+
+  return useQuery({
+    queryKey: ['salesReturn', id],
+    queryFn: () => {
+      if (!token) throw new Error('Token not found')
+      return getSalesDetailsBySalesMasterId(id, token)
+    },
+    enabled: !!token && id > 0,
+    select: (data) => data,
+  })
+}
+
+export const useAddSalesReturn = ({
+  onClose,
+  reset,
+}: {
+  onClose: () => void
+  reset: () => void
+}) => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (data: CreateSalesReturnType) => {
+      return createSalesReturn(data, token)
+    },
+    onSuccess: (data) => {
+      console.log('sales return added successfully:', data)
+      toast({
+        title: 'Success!',
+        description: 'sales return added successfully.',
+      })
+      queryClient.invalidateQueries({ queryKey: ['salesReturn'] })
+      reset()
+      onClose()
+    },
+    onError: (error) => {
+      console.error('Error adding item:', error)
     },
   })
 

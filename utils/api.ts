@@ -42,6 +42,9 @@ import {
   GetLoanType,
   GetLoanReportType,
   GetPurchaseSummaryType,
+  CreateSalesReturnType,
+  GetSaleDetailsType,
+  GetSalesMasterType,
 } from '@/utils/type'
 
 export async function signIn(credentials: SignInRequest) {
@@ -346,6 +349,40 @@ export async function deleteSale(
     method: 'DELETE',
     headers: {
       Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getAllSalesMaster(token: string) {
+  return fetchApi<GetSalesMasterType[]>({
+    url: 'api/sales/getAllSalesMaster',
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getSalesDetailsBySalesMasterId(id: number, token: string) {
+  return fetchApi<GetSaleDetailsType[]>({
+    url: `api/sales/geSalesDetailstBySalesMasterId/${id}`,
+    method: 'GET',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function createSalesReturn(data: CreateSalesReturnType, token: string) {
+  return fetchApi<CreateSalesReturnType>({
+    url: 'api/sales-return/create',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: token,
       'Content-Type': 'application/json',
     },
   })
