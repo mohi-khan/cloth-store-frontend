@@ -869,7 +869,10 @@ export const useAddSalesReturn = ({
     },
     onSuccess: (data) => {
       console.log('sales return added successfully:', data)
-
+      toast({
+        title: 'Success!',
+        description: 'sales return added successfully.',
+      })
       queryClient.invalidateQueries({ queryKey: ['salesReturn'] })
       reset()
       onClose()

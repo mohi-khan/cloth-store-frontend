@@ -92,7 +92,7 @@ const SalesReturn = () => {
     }
   }
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       saleDetailsId: 0,
       returnQuantity: 0,
@@ -101,11 +101,11 @@ const SalesReturn = () => {
     setIsPopupOpen(false)
     setError(null)
     setSelectedSaleDetail(null)
-  }
+  }, [userData?.userId])
 
   const closePopup = useCallback(() => {
     resetForm()
-  }, [userData?.userId])
+  }, [resetForm])
 
   const mutation = useAddSalesReturn({ onClose: closePopup, reset: resetForm })
 
@@ -209,7 +209,7 @@ const SalesReturn = () => {
           <h2 className="text-lg font-semibold">Sales Return</h2>
         </div>
       </div>
-      <div className='flex justify-between items-center'>
+      <div className="flex justify-between items-center">
         <div className="flex items-center justify-start gap-4 mb-4 w-1/4 flex-nowrap">
           <Label htmlFor="salesMasterId" className="text-sm font-medium">
             Sale
@@ -218,14 +218,14 @@ const SalesReturn = () => {
             items={
               salesMasters?.data?.map((sm) => ({
                 id: sm.saleMasterId?.toString() || '0',
-                name: `${sm.customerName} - ${formatDate(sm.saleDate)} - ${formatNumber(sm.totalAmount.toFixed(2))}`,
+                name: `${sm.customerName} - ${formatNumber(sm.totalAmount.toFixed(2))} - ${formatDate(sm.saleDate)}`,
               })) || []
             }
             value={
               selectedSalesMasterId > 0 && selectedSalesMaster
                 ? {
                     id: selectedSalesMasterId.toString(),
-                    name: `${selectedSalesMaster.customerName} - ${formatDate(selectedSalesMaster.saleDate)} - ${formatNumber(selectedSalesMaster.totalAmount.toFixed(2))}`,
+                    name: `${selectedSalesMaster.customerName} - ${formatNumber(selectedSalesMaster.totalAmount.toFixed(2))} - ${formatDate(selectedSalesMaster.saleDate)}`,
                   }
                 : null
             }
@@ -234,14 +234,14 @@ const SalesReturn = () => {
           />
         </div>
         <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-            />
-          </div>
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search items..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-64"
+          />
+        </div>
       </div>
 
       {/* Sales Details Table */}
