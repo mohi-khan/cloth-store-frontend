@@ -180,7 +180,7 @@ export const salesMasterSchema = z.object({
   notes: z.string().optional().nullable(),
   discountAmount: z.number().min(0).optional().default(0),
   createdBy: z.number().int(),
-  createdAt: z.date().optional(), // Automatically handled by DB
+  createdAt: z.date().optional(),
   updatedBy: z.number().int().optional().nullable(),
   updatedAt: z.date().optional().nullable(),
 })
@@ -479,6 +479,18 @@ export const purchaseSummarySchema = z.object({
   totalAmount: z.number(),
 });
 export type GetPurchaseSummaryType = z.infer<typeof purchaseSummarySchema>;
+
+export const salesReturnSchema = z.object({
+  saleReturnId: z.number().optional(),
+  saleDetailsId: z.number(),
+  returnQuantity: z.number(),
+  createdBy: z.number(),
+  createdAt: z.date().optional(),
+  updatedBy: z.number().nullable().optional(),
+  updatedAt: z.date().optional(),
+});
+export type CreateSalesReturnType = z.infer<typeof salesReturnSchema>
+export type GetSalesReturnType = z.infer<typeof salesReturnSchema>
 
 export interface User {
   userId: number

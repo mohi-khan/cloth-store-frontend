@@ -91,6 +91,10 @@ export function DashboardSidebar() {
           href: '/dashboard/trade-management/sales',
         },
         {
+          title: 'Sales Return',
+          href: '/dashboard/trade-management/sales-return',
+        },
+        {
           title: 'Expenses',
           href: '/dashboard/trade-management/expenses',
         },
